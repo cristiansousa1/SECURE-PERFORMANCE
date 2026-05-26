@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Auth & Validation Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Transactions Validation
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['date', 'description', 'amount', 'type', 'categoryId', 'userId', 'createdAt', 'updatedAt']) &&
+             data.description is string && data.description.size() <= 255 &&
+             data.amount is number && data.amount >= 0 &&
+             data.type in ['income', 'expense'] &&
+             data.userId == request.auth.uid &&
+             (data.createdAt is timestamp || data.createdAt == request.time) &&
+             (data.updatedAt is timestamp || data.updatedAt == request.time);
+    }
+
+    // Collections
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+
+      match /transactions/{transactionId} {
+        allow list, get: if isOwner(userId);
+        allow create, update, delete: if isOwner(userId);
+      }
+
+      match /categories/{categoryId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /profile/settings {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    match /users/{userId}/notes/{noteId} {
+      allow list, get: if isSignedIn() && request.auth.uid == userId;
+      allow create, update, delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId}/bills/{billId} {
+      allow list, get: if isSignedIn() && request.auth.uid == userId;
+      allow create, update, delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId}/products/{productId} {
+      allow list, get: if isSignedIn() && request.auth.uid == userId;
+      allow create, update, delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /settings/global {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.token.email == "cristianmilkymoo@gmail.com";
+    }
+
+    match /ai_cache/{cacheId} {
+      allow get: if true;
+      allow create, update: if isValidId(cacheId) &&
+                               incoming().id == cacheId &&
+                               incoming().provider is string &&
+                               incoming().requestHash is string &&
+                               incoming().requestData is string &&
+                               incoming().responseText is string &&
+                               (incoming().expiresAt is string || incoming().expiresAt is timestamp) &&
+                               (incoming().createdAt is string || incoming().createdAt is timestamp);
+    }
+  }
+}

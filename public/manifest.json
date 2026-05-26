@@ -1,0 +1,22 @@
+{
+  "short_name": "Valora",
+  "name": "Valora.AI - Mentoria & Inteligência Financeira",
+  "description": "Mentoria e assessoria financeira inteligente com a mentora Dafne AI",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/color/192/financial-growth-analysis.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://img.icons8.com/color/512/financial-growth-analysis.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#09090b",
+  "theme_color": "#ea580c",
+  "display": "standalone",
+  "orientation": "portrait"
+}

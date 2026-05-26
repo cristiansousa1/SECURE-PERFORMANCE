@@ -1,0 +1,38 @@
+import { CategoryGroup, Category } from './types';
+
+export const CATEGORY_GROUPS: { value: CategoryGroup; label: string; dreOrder: number }[] = [
+  { value: 'REVENUE', label: 'Receita Bruta', dreOrder: 1 },
+  { value: 'TAX', label: 'Deduções e Impostos', dreOrder: 2 },
+  { value: 'COGS', label: 'Custos Variáveis (CMV/CPV)', dreOrder: 4 },
+  { value: 'OPEX', label: 'Despesas Fixas e Operacionais', dreOrder: 6 },
+  { value: 'OTHER_INCOME', label: 'Outras Receitas', dreOrder: 8 },
+  { value: 'OTHER_EXPENSE', label: 'Outras Despesas', dreOrder: 9 },
+  { value: 'INVESTMENT', label: 'Investimentos', dreOrder: 11 },
+];
+
+export const DEFAULT_CATEGORIES: Partial<Category>[] = [
+  { name: 'Venda de Produtos', type: 'income', group: 'REVENUE' },
+  { name: 'Prestação de Serviços', type: 'income', group: 'REVENUE' },
+  { name: 'DAS / Simples Nacional', type: 'expense', group: 'TAX' },
+  { name: 'Compra de Mercadoria', type: 'expense', group: 'COGS' },
+  { name: 'Fretes', type: 'expense', group: 'COGS' },
+  { name: 'Aluguel Escritório / Galpão', type: 'expense', group: 'OPEX' },
+  { name: 'Pró-labore', type: 'expense', group: 'OPEX' },
+  { name: 'Salários e Encargos', type: 'expense', group: 'OPEX' },
+  { name: 'Marketing / Tráfego Pago', type: 'expense', group: 'OPEX' },
+  { name: 'Software / Assinaturas SaaS', type: 'expense', group: 'OPEX' },
+  { name: 'Energia / Água / Utilidades', type: 'expense', group: 'OPEX' },
+  { name: 'Tarifas Bancárias e Gateway', type: 'expense', group: 'OPEX' },
+  { name: 'Infraestrutura de Nuvem / Servidores', type: 'expense', group: 'OPEX' },
+  { name: 'Modelos e APIs de I.A. (OpenAI, Gemini)', type: 'expense', group: 'OPEX' },
+  { name: 'Consultoria e Auditorias Externas', type: 'expense', group: 'OPEX' },
+  { name: 'Logística, Entregadores e APPs', type: 'expense', group: 'COGS' },
+  { name: 'Insumos de Manutenção e Reparos', type: 'expense', group: 'OPEX' },
+  { name: 'Embalagens e Lacres de Segurança', type: 'expense', group: 'COGS' },
+  { name: 'Honorários Contábeis e Fiscal', type: 'expense', group: 'OPEX' },
+  { name: 'Impostos Municipais (ISS/IPTU)', type: 'expense', group: 'TAX' },
+  { name: 'Treinamento e Capacitação Técnica', type: 'expense', group: 'OPEX' },
+  { name: 'Brindes & Sucesso do Cliente (CS)', type: 'expense', group: 'OPEX' },
+  { name: 'Rendimentos', type: 'income', group: 'OTHER_INCOME' },
+  { name: 'Investimentos', type: 'expense', group: 'INVESTMENT' },
+];

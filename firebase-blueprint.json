@@ -1,0 +1,78 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "A financial transaction (revenue or expense).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "categoryId": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["date", "description", "amount", "type", "categoryId", "userId", "createdAt", "updatedAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Financial category for DRE classification.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "group": { "type": "string", "enum": ["REVENUE", "COGS", "OPEX", "OTHER_INCOME", "OTHER_EXPENSE", "TAX", "INVESTMENT"] },
+        "userId": { "type": "string" }
+      },
+      "required": ["name", "type", "group", "userId"]
+    },
+    "BusinessProfile": {
+      "title": "Business Profile",
+      "description": "User business settings.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "companyName": { "type": "string" },
+        "currency": { "type": "string" }
+      },
+      "required": ["userId", "companyName"]
+    },
+    "AiCache": {
+      "title": "AI Cache",
+      "description": "Cached responses from Gemini or OpenAI APIs to avoid duplicate calls and quota limits.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "provider": { "type": "string" },
+        "requestHash": { "type": "string" },
+        "requestData": { "type": "string" },
+        "responseText": { "type": "string" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "provider", "requestHash", "requestData", "responseText", "expiresAt", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/ai_cache/{cacheId}": {
+      "schema": "AiCache",
+      "description": "Global cache for AI responses queryable by request hash."
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Transactions belong to a user."
+    },
+    "/users/{userId}/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Custom categories for the user."
+    },
+    "/users/{userId}/profile/settings": {
+      "schema": "BusinessProfile",
+      "description": "Business settings for the user."
+    }
+  }
+}
