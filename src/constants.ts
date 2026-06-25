@@ -25,6 +25,8 @@ export const DEFAULT_CATEGORIES: Partial<Category>[] = [
   { name: 'Tarifas Bancárias e Gateway', type: 'expense', group: 'OPEX' },
   { name: 'Infraestrutura de Nuvem / Servidores', type: 'expense', group: 'OPEX' },
   { name: 'Modelos e APIs de I.A. (OpenAI, Gemini)', type: 'expense', group: 'OPEX' },
+  { name: 'Despesas com Inteligência Artificial', type: 'expense', group: 'OPEX' },
+  { name: 'Custos de Infraestrutura de Nuvem', type: 'expense', group: 'OPEX' },
   { name: 'Consultoria e Auditorias Externas', type: 'expense', group: 'OPEX' },
   { name: 'Logística, Entregadores e APPs', type: 'expense', group: 'COGS' },
   { name: 'Insumos de Manutenção e Reparos', type: 'expense', group: 'OPEX' },

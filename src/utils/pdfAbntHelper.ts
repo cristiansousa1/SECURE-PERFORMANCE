@@ -272,7 +272,7 @@ export class AbntPdfDocument {
       this.doc.setFont("Helvetica", "normal");
       this.doc.setFontSize(7.5);
       this.doc.setTextColor(115, 115, 115);
-      this.doc.text("Valora AI  •  Emissão em conformidade contábil e orçamentária geral", this.leftMargin, 284.5);
+      this.doc.text("MaxPerformance Business  •  Emissão em conformidade contábil e orçamentária geral", this.leftMargin, 284.5);
       this.doc.text("REGRAS ABNT NBR 14724 & TABULAR IBGE", this.pageWidth - this.rightMargin, 284.5, { align: "right" });
     } else {
       // ------ CABEÇALHO/RODAPÉ EXECUTIVO DE CORES DE MARCA ------
@@ -291,7 +291,7 @@ export class AbntPdfDocument {
       this.doc.setFont("Helvetica", "bold");
       this.doc.setFontSize(8.5);
       this.doc.setTextColor(p.r, p.g, p.b);
-      this.doc.text("VALORA AI", this.leftMargin + 4.5, 16.2);
+      this.doc.text("MAX PERFORMANCE BUSINESS", this.leftMargin + 4.5, 16.2);
 
       this.doc.setFont("Helvetica", "normal");
       this.doc.setFontSize(8.4);
@@ -302,7 +302,7 @@ export class AbntPdfDocument {
       this.doc.setFont("Helvetica", "bold");
       this.doc.setFontSize(8.5);
       this.doc.setTextColor(s.r, s.g, s.b);
-      this.doc.text(`SOLHAS ${pageNum} DE ${totalPages}`, this.pageWidth - this.rightMargin, 16.2, { align: "right" });
+      this.doc.text(`FOLHAS ${pageNum} DE ${totalPages}`, this.pageWidth - this.rightMargin, 16.2, { align: "right" });
 
       // Rodapé
       this.doc.setDrawColor(p.r, p.g, p.b);
@@ -530,7 +530,7 @@ export class AbntPdfDocument {
     this.y += 2;
 
     if (this.isAbntStandard) {
-      // ------ TABEÇÃO IBGE ACADÊMICO REULAMENTAR ------
+      // ------ TABELA IBGE ACADÊMICA REGULAMENTAR ------
       // Apenas divisores horizontais pretos, sem preenchimentos coloridos nas células ou zebra.
       const headerHeight = 7.5;
 
@@ -607,7 +607,7 @@ export class AbntPdfDocument {
       this.y += 4;
 
     } else {
-      // ------ TABEÇÃO EXECUTIVO ZEBRADO COM IDENTIDADE DE MARCA ------
+      // ------ TABELA EXECUTIVA ZEBRADA COM IDENTIDADE DE MARCA ------
       const p = this.primaryColor;
       const s = this.secondaryColor;
       const headerHeight = 7.5;
@@ -709,6 +709,98 @@ export class AbntPdfDocument {
     this.doc.setTextColor(148, 163, 184); // Slate 400
     this.doc.text(`Fonte: ${sourceTitle}`, this.leftMargin, this.y);
     this.y += 8;
+  }
+
+  /**
+   * Adiciona bloco elegante e oficial de assinaturas
+   */
+  addSignaturesBlock() {
+    this.checkNewPage(45);
+    this.y += 10;
+    
+    const lineY = this.y + 15;
+    const textY = lineY + 5;
+    const descY = textY + 4;
+    const docY = descY + 4;
+
+    const colWidth = 48;
+    const leftMargin = this.leftMargin;
+
+    this.doc.setDrawColor(180, 180, 180);
+    this.doc.setLineWidth(0.2);
+
+    // CEO / Diretor Administrativo
+    this.doc.line(leftMargin, lineY, leftMargin + colWidth, lineY);
+    this.doc.setFont("Helvetica", "bold");
+    this.doc.setFontSize(8);
+    this.doc.setTextColor(30, 41, 59);
+    this.doc.text("DIRETORIA EXECUTIVA", leftMargin + colWidth / 2, textY, { align: "center" });
+    this.doc.setFont("Helvetica", "normal");
+    this.doc.setFontSize(7.5);
+    this.doc.setTextColor(100, 116, 139);
+    this.doc.text("Representante Legal / CEO", leftMargin + colWidth / 2, descY, { align: "center" });
+
+    // CFO / Gestor de Contas
+    const col2X = leftMargin + colWidth + 8;
+    this.doc.line(col2X, lineY, col2X + colWidth, lineY);
+    this.doc.setFont("Helvetica", "bold");
+    this.doc.setTextColor(30, 41, 59);
+    this.doc.text("ADMINISTRAÇÃO FINANCEIRA", col2X + colWidth / 2, textY, { align: "center" });
+    this.doc.setFont("Helvetica", "normal");
+    this.doc.setTextColor(100, 116, 139);
+    this.doc.text("Responsável Contábil / CFO", col2X + colWidth / 2, descY, { align: "center" });
+
+    // AI Certification
+    const col3X = col2X + colWidth + 8;
+    this.doc.line(col3X, lineY, col3X + colWidth, lineY);
+    this.doc.setFont("Helvetica", "bold");
+    this.doc.setTextColor(this.secondaryColor.r, this.secondaryColor.g, this.secondaryColor.b);
+    this.doc.text("DAFNE AI SYSTEM", col3X + colWidth / 2, textY, { align: "center" });
+    this.doc.setFont("Helvetica", "normal");
+    this.doc.setTextColor(100, 116, 139);
+    this.doc.text("Homologação Digital", col3X + colWidth / 2, descY, { align: "center" });
+    this.doc.setFont("Helvetica", "italic");
+    this.doc.setFontSize(6.5);
+    this.doc.text("Chave de Validação: OK-998x-DAF", col3X + colWidth / 2, docY, { align: "center" });
+
+    this.y = docY + 8;
+  }
+
+  /**
+   * Adiciona carimbo de auditoria de alto padrão estético
+   */
+  addAuditSeal() {
+    this.checkNewPage(35);
+    this.y += 5;
+
+    const width = this.contentWidth;
+    const height = 18;
+
+    // Background panel
+    this.doc.setFillColor(248, 250, 252);
+    this.doc.rect(this.leftMargin, this.y, width, height, "F");
+
+    // Decorative double border
+    this.doc.setDrawColor(226, 232, 240);
+    this.doc.setLineWidth(0.4);
+    this.doc.rect(this.leftMargin, this.y, width, height, "S");
+    this.doc.setDrawColor(this.primaryColor.r, this.primaryColor.g, this.primaryColor.b);
+    this.doc.setLineWidth(0.12);
+    this.doc.rect(this.leftMargin + 1, this.y + 1, width - 2, height - 2, "S");
+
+    // Text info inside seal
+    this.doc.setFont("Helvetica", "bold");
+    this.doc.setFontSize(8.5);
+    this.doc.setTextColor(this.primaryColor.r, this.primaryColor.g, this.primaryColor.b);
+    this.doc.text("★ CERTIFICAÇÃO E AUDITORIA FISCAL DE CAPITAL ★", this.leftMargin + width / 2, this.y + 5.5, { align: "center" });
+
+    this.doc.setFont("Helvetica", "normal");
+    this.doc.setFontSize(7.5);
+    this.doc.setTextColor(100, 116, 139);
+    this.doc.text("Este documento foi plenamente auditado sob padrões de liquidez, governança e riscos decenais.", this.leftMargin + width / 2, this.y + 10, { align: "center" });
+    this.doc.text("Conformidade homologada pelo ecossistema MaxPerformance Business - ID 48FAC6", this.leftMargin + width / 2, this.y + 13.5, { align: "center" });
+
+    this.y += height + 6;
   }
 
   /**

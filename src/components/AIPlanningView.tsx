@@ -141,6 +141,42 @@ export default function AIPlanningView() {
         `1. **Regra de Cofrinho**: Transferir semanalmente de 5% a 8% de todo faturamento compensado diretamente para o Cofrinho de Investimentos.\n` +
         `2. **Janela de Recebimentos**: Ajustar prazos médios de vendas com cartões para diminuir taxas abusivas de antecipação.\n` +
         `3. **Garantia Tributária**: Reservar de forma destacada o montante do imposto federal mensal e do FGTS logo após o faturamento.`
+    },
+    {
+      id: "precificacao_markup",
+      title: "Otimização de Preços & Markup",
+      description: "Auditar custos diretos (CMV) e recalcular multiplicador ideal de preço.",
+      initialPrompt: "Quero recalcular meus preços de venda. Me ajude a definir o Markup ponderado ideal cobrindo impostos e comissões para garantir margem de contribuição acima de 40%.",
+      docSnippet: (compName: string, inc: number, exp: number) =>
+        `# GOVERNANÇA DE PRECIFICAÇÃO E MARGEM PJ\n\n` +
+        `Empresa: ${compName}\n` +
+        `Data: ${new Date().toLocaleDateString("pt-BR")}\n\n` +
+        `## 🎯 OBJETIVOS DE LUCRATIVIDADE\n` +
+        `- Garantir margem de contribuição unitária ponderada mínima de 40% a 45%.\n` +
+        `- Estabelecer o multiplicador de Markup Ideal sobre o custo direto na faixa de 2.2x a 2.5x.\n\n` +
+        `## 📊 MÉTRICAS DE PONTO DE PARTIDA CORRENTE\n` +
+        `- Receita Operacional Acumulada: ${formatCurrency(inc)}\n` +
+        `- Despesas Globais Registradas: ${formatCurrency(exp)}\n\n` +
+        `## 📝 PASSOS DE IMPLANTAÇÃO DA PRECIFICAÇÃO\n` +
+        `1. **Composição da Ficha Técnica**: Mapear detalhadamente cada centavo de insumo, embalagem e frete de entrada do produto principal.\n` +
+        `2. **Configuração de Deduções Legais**: Deduzir impostos incidentes sobre o faturamento Bruto (alíquotas do Simples Nacional ou Lucro Presumido).\n` +
+        `3. **Limite Máximo de Comissionamento**: Travar a comissão máxima e descontos comerciais em no máximo 12%.`
+    },
+    {
+      id: "elisao_fiscal",
+      title: "Planejamento Tributário & Elisão",
+      description: "Recuperar PIS/COFINS monofásico e enquadrar no fator R legal.",
+      initialPrompt: "Quero otimizar meus impostos legítimos de Simples Nacional. Me ajude a construir um plano de blindagem fiscal e elisão tributária baseada no meu faturamento PJ.",
+      docSnippet: (compName: string, inc: number, exp: number) =>
+        `# PLANEJAMENTO TRIBUTÁRIO & ELISÃO DE IMPOSTOS DAS FILIAIS\n\n` +
+        `Empresa: ${compName}\n` +
+        `Data: ${new Date().toLocaleDateString("pt-BR")}\n\n` +
+        `## 🎯 DIRETRIZ ECONÔMICA\n` +
+        `Reduzir legitamente a alíquota tributária efetiva unificada através de elisão fiscal e correta segregação de receitas operacionais.\n\n` +
+        `## 🔍 INVENTÁRIO DE OPORTUNIDADES FISCAIS\n` +
+        `1. **Segregação de Monofásicos**: Isolar vendas de itens classificados como tributação monofásica de PIS/COFINS (como autopeças, cosméticos, perfumaria e bebidas) para zerar esse imposto na guia mensal do Simples Nacional.\n` +
+        `2. **Otimização via Fator R**: Se enquadrado no Anexo V (serviços gerais com alíquota inicial de 15.5%), manter a folha de salários superior a 28% do faturamento para migrar para o Anexo III (alíquota inicial de 6%).\n` +
+        `3. **DRE de Gestão Corrente**: Analisar o impacto tributário mensal estimado no balancete bruto.`
     }
   ];
 

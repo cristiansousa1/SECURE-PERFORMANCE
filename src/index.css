@@ -7,11 +7,11 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
-/* Base custom resets & premium touchups */
-* {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+/* Base custom resets & premium touchups - optimized to target interactive elements to avoid layout recalculation thrashing on every node */
+button, a, select, textarea, input, [role="button"], .transition-all, .transition-colors, .tech-card-hover, .sidebar-nav-item, .btn-premium {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, transform, box-shadow;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-duration: 180ms;
 }
 
 /* Beautiful custom thin scrollbars for web-app feel */
@@ -22,36 +22,563 @@
 
 ::-webkit-scrollbar-track {
   background: transparent;
+  margin: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(20, 20, 20, 0.1);
+  background: rgba(20, 20, 20, 0.15);
   border-radius: 9999px;
 }
 
 .dark ::-webkit-scrollbar-thumb,
-aside ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+aside ::-webkit-scrollbar-thumb,
+[class*="bg-[#0b0c0e]"] ::-webkit-scrollbar-thumb,
+[class*="bg-[#0c0c0c]"] ::-webkit-scrollbar-thumb,
+[class*="bg-[#141414]"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(249, 115, 22, 0.3);
+  background: rgba(249, 115, 22, 0.4);
 }
 
-/* Custom premium card animations and shapes */
+.dark ::-webkit-scrollbar-thumb:hover,
+aside ::-webkit-scrollbar-thumb:hover,
+[class*="bg-[#0b0c0e]"] ::-webkit-scrollbar-thumb:hover,
+[class*="bg-[#0c0c0c]"] ::-webkit-scrollbar-thumb:hover,
+[class*="bg-[#141414]"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.5);
+}
+
+/* Cross-browser scrollbar properties */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(20, 20, 20, 0.15) transparent;
+  scroll-behavior: smooth;
+}
+
+.dark *,
+aside *,
+[class*="bg-[#0b0c0e]"] *,
+[class*="bg-[#0c0c0c]"] *,
+[class*="bg-[#141414]"] * {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+/* 
+  Provide robust layout stabilization with automatic scrollbar placement
+  so content has maximized width space and is never squeezed/clipped.
+*/
+html {
+  scrollbar-gutter: auto;
+  scroll-behavior: smooth;
+}
+
+.overflow-y-auto,
+[class*="overflow-y-auto"] {
+  scrollbar-gutter: auto;
+  scroll-behavior: smooth;
+  scroll-padding-top: 1rem;
+  scroll-padding-bottom: 1.5rem;
+}
+
+/* Symmetrical framing for centered modals & dialog contents */
+.fixed .overflow-y-auto,
+[class*="fixed"] [class*="overflow-y-auto"] {
+  scrollbar-gutter: auto;
+}
+
+/* Touch & horizontal scrolling responsiveness fixes */
+.overflow-x-auto,
+[class*="overflow-x-auto"] {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: auto !important;
+  scroll-padding-left: 1rem;
+  scroll-padding-right: 1rem;
+  padding-bottom: 8px; /* Space inside the container to prevent visual cutoff on overflow */
+}
+
+/* 
+  Ensures that the last child of any scrolling element has a comfortable safety margin 
+  from the border so it's always fully visible, well framed, and easy to interact with.
+*/
+.overflow-y-auto > *:last-child,
+[class*="overflow-y-auto"] > *:last-child {
+  padding-bottom: 1.5rem;
+}
+
+/* Custom premium card animations and shapes with high-tech look and feed */
+@keyframes orangeGlow {
+  0%, 100% {
+    border-color: rgba(249, 115, 22, 0.4);
+    box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);
+  }
+  50% {
+    border-color: rgba(249, 115, 22, 0.9);
+    box-shadow: 0 0 24px rgba(249, 115, 22, 0.6);
+  }
+}
+
+.animate-orange-glow {
+  animation: orangeGlow 2.5s ease-in-out infinite;
+}
+
 .tech-card {
   background: #ffffff;
-  border: 1px solid rgba(244, 244, 245, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01), 0 20px 25px -5px rgba(0, 0, 0, 0.02), 0 10px 10px -5px rgba(0, 0, 0, 0.01);
-  border-radius: 1.5rem;
+  border: 1px solid rgba(240, 240, 243, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01), 0 16px 36px -8px rgba(0, 0, 0, 0.015), 0 4px 12px -2px rgba(0, 0, 0, 0.01);
+  border-radius: 1.75rem;
 }
 
 .tech-card-hover {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  will-change: transform, box-shadow;
+}
+
+.tech-card-hover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 1.75rem;
+  border: 1px solid transparent;
+  transition: border-color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
 }
 
 .tech-card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 40px -15px rgba(249, 115, 22, 0.05), 0 1px 3px rgba(249, 115, 22, 0.02);
-  border-color: rgba(249, 115, 22, 0.15);
+  transform: translateY(-2px) scale([1.002]);
+  box-shadow: 0 30px 60px -15px rgba(249, 115, 22, 0.06), 0 10px 20px -8px rgba(249, 115, 22, 0.02);
+  border-color: rgba(249, 115, 22, 0.12);
 }
+
+.tech-card-hover:hover::after {
+  border-color: rgba(249, 115, 22, 0.2);
+}
+
+/* Alert rule for CMV > 40% cell highlights in the pricing spreadsheet */
+#pricing-view-container .cmv-high-row td {
+  background-color: #fef2f2 !important;
+  font-weight: 700 !important;
+}
+
+/* Highly accurate lateral glow & inner border scaling for sidebar navigation items */
+.sidebar-nav-item {
+  position: relative;
+  transition: all 0.12s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.sidebar-nav-item::before {
+  content: '';
+  position: absolute;
+  top: 15%;
+  bottom: 15%;
+  left: 0;
+  width: 4px;
+  background: #f97316;
+  border-radius: 0 4px 4px 0;
+  opacity: 0;
+  transform: scaleX(0);
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.1s linear;
+  pointer-events: none;
+}
+
+/* Hover or Active triggers a glorious lateral feedback look */
+.sidebar-nav-item:hover::before {
+  opacity: 0.5;
+  transform: scaleX(1);
+}
+
+.sidebar-nav-item[class*="border-orange-500"]::before,
+.sidebar-nav-item[class*="border-l-orange-500"]::before {
+  opacity: 1;
+  transform: scaleX(1.2);
+  box-shadow: 0 0 10px #f97316, 0 0 20px rgba(249, 115, 22, 0.4);
+}
+
+/* Specific tooltip styling for the 5-years chart as requested */
+#five-years-general-history-chart .recharts-default-tooltip {
+  background: #0c0c0c !important;
+  border: 1px solid #f97316 !important;
+  border-radius: 12px !important;
+  color: #ffffff !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+}
+
+/* Premium Visual Enhancements & Sophisticated Design presets */
+.glass-premium {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.02), 0 12px 40px -10px rgba(249, 115, 22, 0.03);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.glass-premium-dark {
+  background: rgba(12, 12, 12, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.shadow-premium-sm {
+  box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.02), 0 8px 16px -4px rgba(0, 0, 0, 0.01);
+}
+
+.shadow-premium-md {
+  box-shadow: 0 4px 20px -3px rgba(0, 0, 0, 0.015), 0 16px 44px -8px rgba(0, 0, 0, 0.025);
+}
+
+.shadow-premium-lg {
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.04), 0 20px 60px -15px rgba(249, 115, 22, 0.02);
+}
+
+.btn-premium {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-premium::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.15) 30%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.15) 70%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  transition: .75s ease-in-out;
+  opacity: 0;
+}
+
+.btn-premium:hover::after {
+  left: 125%;
+  opacity: 1;
+}
+
+.accent-glow-orange {
+  position: relative;
+}
+
+.accent-glow-orange::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(45deg, #f97316, #fdbb74, #f97316);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: blur(6px);
+}
+
+.accent-glow-orange:hover::before {
+  opacity: 0.45;
+}
+
+.accent-glow-emerald {
+  position: relative;
+}
+
+.accent-glow-emerald::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(45deg, #10b981, #34d399, #10b981);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: blur(6px);
+}
+
+.accent-glow-emerald:hover::before {
+  opacity: 0.45;
+}
+
+/* Smooth visual rhythm transition classes */
+.micro-interactive {
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.micro-interactive:hover {
+  transform: scale(1.02) translateY(-1px);
+}
+
+.micro-interactive:active {
+  transform: scale(0.985) translateY(0);
+}
+
+/* Premium gradient titles */
+.text-gradient-primary {
+  background: linear-gradient(135deg, #141414 0%, #4b5563 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-orange {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Elegant, symmetrical accent dot for card headers */
+.accent-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: #f97316;
+  box-shadow: 0 0 8px #f97316, 0 0 15px rgba(249, 115, 22, 0.4);
+}
+
+/* Custom premium classes to soften borders, tables, and inputs */
+.input-premium {
+  background: #ffffff;
+  border: 1px solid rgba(220, 224, 230, 0.85);
+  border-radius: 0.85rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.825rem;
+  font-weight: 500;
+  outline: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.015);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.input-premium:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.08), 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.table-premium {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.table-premium th {
+  background: #fafbfb;
+  color: #4b5563;
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.875rem 1rem;
+  border-bottom: 1.5px solid rgba(235, 238, 242, 1);
+}
+
+.table-premium td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid rgba(240, 242, 245, 0.8);
+  font-size: 0.8rem;
+  color: #1a1a1a;
+  transition: background-color 0.15s ease;
+}
+
+.table-premium tr:hover td {
+  background-color: rgba(249, 115, 22, 0.015);
+}
+
+.card-solid-premium {
+  background: #ffffff;
+  border: 1px solid rgba(232, 235, 240, 0.85);
+  box-shadow: 0 4px 20px -3px rgba(0, 0, 0, 0.01), 0 12px 36px -10px rgba(0,0,0,0.012);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+}
+
+/* Elite futuristic styles with Black, White & Orange Theme */
+.tech-glowing-dots {
+  background-image: radial-gradient(rgba(249, 115, 22, 0.1) 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+
+.clean-card-laser {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2rem;
+  border: 1px solid rgba(240, 241, 245, 1);
+  background: linear-gradient(135deg, #ffffff 0%, #fcfdfe 100%);
+  box-shadow: 0 6px 20px -5px rgba(0, 0, 0, 0.015), 0 20px 40px -15px rgba(0, 0, 0, 0.01);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.clean-card-laser:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -8px rgba(249, 115, 22, 0.08), 0 25px 50px -15px rgba(0, 0, 0, 0.02);
+  border-color: rgba(249, 115, 22, 0.22);
+}
+
+.clean-card-laser::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #f97316 0%, #141414 50%, #ea580c 100%);
+  opacity: 0.15;
+  transition: opacity 0.3s ease;
+}
+
+.clean-card-laser:hover::before {
+  opacity: 1;
+}
+
+.tech-neon-gradient-text {
+  background: linear-gradient(135deg, #111827 10%, #374151 50%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.tech-cyber-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 9999px;
+  background: rgba(249, 115, 22, 0.06);
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  color: #ea580c;
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.03);
+}
+
+.glow-overlay-emerald {
+  box-shadow: 0 0 35px -5px rgba(249, 115, 22, 0.08);
+}
+
+.glow-overlay-orange {
+  box-shadow: 0 0 35px -5px rgba(249, 115, 22, 0.12);
+}
+
+/* ==========================================================================
+   COHESIVE BALANCED BLACK, WHITE, AND ORANGE PALETTE GLOBAL OVERRIDES
+   ========================================================================== */
+
+/* Coerce any default primary colors (blue, purple, emerald, teal, etc.) to Orange */
+.bg-indigo-600, .bg-blue-600, .bg-violet-600, .bg-purple-600, .bg-emerald-600, .bg-teal-600, .bg-amber-600, .bg-cyan-600 {
+  background-color: #f97316 !important;
+}
+
+.bg-indigo-700, .bg-blue-700, .bg-violet-700, .bg-purple-700, .bg-emerald-700, .bg-teal-700, .bg-amber-700, .bg-cyan-700 {
+  background-color: #ea580c !important;
+}
+
+.bg-indigo-500, .bg-blue-500, .bg-violet-500, .bg-purple-500, .bg-emerald-500, .bg-teal-500, .bg-amber-500, .bg-cyan-500 {
+  background-color: #f97316 !important;
+}
+
+.bg-indigo-400, .bg-blue-400, .bg-emerald-400, .bg-teal-400, .bg-amber-400 {
+  background-color: #fdba74 !important; /* Soft orange */
+}
+
+/* Soft Tint Background Overrides */
+.bg-indigo-100, .bg-blue-100, .bg-violet-100, .bg-purple-100, .bg-emerald-100, .bg-teal-100, .bg-amber-100, .bg-cyan-100 {
+  background-color: rgba(249, 115, 22, 0.08) !important;
+}
+
+.bg-indigo-50, .bg-blue-50, .bg-violet-50, .bg-purple-50, .bg-emerald-50, .bg-teal-50, .bg-amber-50, .bg-cyan-50 {
+  background-color: rgba(249, 115, 22, 0.04) !important;
+}
+
+/* Badge and micro text backgrounds */
+.text-indigo-600, .text-blue-600, .text-violet-600, .text-purple-600, .text-emerald-600, .text-teal-600, .text-amber-600, .text-cyan-600, .text-indigo-500, .text-blue-500, .text-emerald-500 {
+  color: #f97316 !important;
+}
+
+.text-indigo-700, .text-blue-700, .text-violet-700, .text-purple-700, .text-emerald-700, .text-teal-700, .text-amber-700, .text-cyan-700 {
+  color: #ea580c !important;
+}
+
+.text-indigo-800, .text-blue-800, .text-emerald-800 {
+  color: #c2410c !important; /* Rich brick orange */
+}
+
+/* Border overrides */
+.border-indigo-600, .border-blue-600, .border-violet-600, .border-purple-600, .border-emerald-600, .border-teal-600, .border-amber-600 {
+  border-color: #f97316 !important;
+}
+
+.border-indigo-500, .border-blue-500, .border-violet-500, .border-purple-500, .border-emerald-500, .border-teal-500, .border-amber-500 {
+  border-color: #f97316 !important;
+}
+
+.border-indigo-200, .border-blue-200, .border-violet-200, .border-purple-200, .border-emerald-200, .border-teal-200, .border-amber-200 {
+  border-color: rgba(249, 115, 22, 0.2) !important;
+}
+
+.border-indigo-100, .border-blue-100, .border-violet-100, .border-purple-100, .border-emerald-100, .border-teal-100, .border-amber-100 {
+  border-color: rgba(249, 115, 22, 0.1) !important;
+}
+
+/* Ring & Focus colors */
+.focus\:ring-indigo-500:focus, .focus\:ring-blue-500:focus, .focus\:ring-emerald-500:focus, .focus\:border-indigo-500:focus {
+  --tw-ring-color: #f97316 !important;
+  border-color: #f97316 !important;
+}
+
+.peer-checked\:bg-indigo-600:checked ~ div, .peer-checked\:bg-indigo-500:checked ~ div {
+  background-color: #f97316 !important;
+}
+
+/* Gradient overrides: Unify gradients to a sleek Charcoal-to-Orange style */
+.from-indigo-500, .from-blue-500, .from-emerald-500, .from-purple-500, .from-teal-500, .from-violet-500 {
+  --tw-gradient-from: #141414 !important;
+  --tw-gradient-to: #ea580c !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.to-indigo-600, .to-blue-600, .to-emerald-600, .to-purple-600, .to-teal-600, .to-violet-600, .to-emerald-500, .to-blue-500 {
+  --tw-gradient-to: #ea580c !important;
+}
+
+.from-emerald-600, .from-teal-600, .from-blue-600 {
+  --tw-gradient-from: #141414 !important;
+}
+
+/* Uniform design consistency and balanced proportions */
+input, select, textarea {
+  border-radius: 0.75rem !important; /* Symmetrical spacing */
+  border-color: rgba(20, 20, 20, 0.1) !important;
+}
+
+.rounded-2xl {
+  border-radius: 1.25rem !important;
+}
+
+.rounded-3xl {
+  border-radius: 1.75rem !important;
+}
+
+/* Sleek scrollbar with Orange highlight */
+::-webkit-scrollbar-thumb {
+  background: rgba(249, 115, 22, 0.2) !important;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.6) !important;
+}
+
+
+
+
+

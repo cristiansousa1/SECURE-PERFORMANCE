@@ -21,7 +21,12 @@ import {
   Cpu,
   ShieldAlert,
   Activity,
-  RefreshCw
+  RefreshCw,
+  Calendar,
+  TrendingUp,
+  Gauge,
+  Lightbulb,
+  Sliders
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from "recharts";

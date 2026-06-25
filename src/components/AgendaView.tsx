@@ -244,7 +244,7 @@ export default function AgendaView() {
                 Sincronização Ativa
               </span>
               <span className="text-gray-400 text-xs font-bold font-mono">
-                Assessor Técnico Valora
+                Assessor Técnico MaxPerformance
               </span>
             </div>
             <h2 className="text-2xl font-black font-display uppercase italic tracking-tighter">
@@ -640,7 +640,7 @@ export default function AgendaView() {
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-white rounded-[2.5rem] p-6 md:p-8 max-w-lg w-full shadow-2xl border border-gray-100 relative overflow-hidden"
+              className="bg-white rounded-[2.5rem] p-6 md:p-8 max-w-lg w-full shadow-2xl border border-gray-100 relative overflow-y-auto max-h-[90vh]"
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50 -mr-8 -mt-8 rounded-full pointer-events-none" />
               

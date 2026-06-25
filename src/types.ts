@@ -35,6 +35,8 @@ export interface Transaction {
   isProductSale?: boolean;
   feeAmount?: number;
   netAmount?: number;
+  isCmvExpense?: boolean;
+  originalSaleId?: string;
 }
 
 export interface StoreProfile {
@@ -42,8 +44,14 @@ export interface StoreProfile {
   companyName: string;
   cnpj: string;
   taxRate: number;
+  cardFeeRate?: number;
   businessSegment: string;
   color?: string;
+  customUrl?: string;
+  razaoSocial?: string;
+  inscricaoEstadual?: string;
+  inscricaoMunicipal?: string;
+  socioResponsavel?: string;
 }
 
 export interface DRELine {
@@ -59,8 +67,11 @@ export interface BusinessProfile {
   companyName: string;
   currency: string;
   taxRate?: number;
+  cardFeeRate?: number;
+  balance?: number;            // Current dynamic cash balance
   subscriptionPlan?: 'free' | 'pro' | 'enterprise' | 'annual';
   subscriptionStatus?: 'active' | 'inactive';
+  cancellationFeedback?: any;   // Custom feedback object stored on cancel
   corporateSubscriptions?: Array<{
     id: string;
     name: string;
@@ -72,6 +83,28 @@ export interface BusinessProfile {
   billingGoal?: number;        // Objetivo principal de faturamento
   billingGoalDeadline?: string; // Prazo do objetivo
   billingNotes?: string;       // Notas/Anotações de estratégia
+  costLimitOpex?: number;      // Limite de custo operacional (OPEX)
+  costLimitCmv?: number;       // Limite de custo de mercadorias vendidas (CMV)
+  businessType?: string;       // Tipo/modelo do negócio (ex: SaaS, Varejo, Alimentação, Serviços)
+  businessSegment?: string;    // Custom business segment (e.g. "service", "retail")
+  businessNicheDetail?: string;// Detailed custom niche
+  enabledModules?: string[];   // Active sidebar modules/tabs customizable by segment
+  nicheFocus?: string;         // Custom niche focus
+  chargeModel?: 'subscription' | 'single_sales' | 'mixed'; // Modelo de Cobrança (Assinaturas, Vendas Únicas, Misto)
+  averageTicket?: number;      // Ticket Médio
+  subscriptionLink?: string;   // Link customizado para checkout de assinatura Stripe/gateway
+  subscriptionPrice?: number;  // Preço customizado para a assinatura
+  subscriptionAnnualLink?: string; // Link customizado para checkout anual
+  subscriptionAnnualPrice?: number; // Preço customizado para a assinatura anual
+  additionalGoals?: Array<{     // Outros objetivos/metas PJ adicionais
+    id: string;
+    title: string;
+    targetValue: number;
+    type: 'income' | 'profit' | 'ticket' | 'sales_volume' | 'acquisition_cost' | 'churn' | 'other' | 'liquidity';
+    deadline?: string;
+    reached?: boolean;
+    desiredProfitMargin?: number; // Margem de lucro desejada (%) para consideração no progresso real
+  }>;
 }
 
 export interface PlanConfig {
@@ -96,6 +129,12 @@ export interface BillPayable {
   userId: string;
   createdAt: Date;
   updatedAt: Date;
+  expenseCategory?: 'administrative' | 'marketing' | 'production'; // "Categoria da despesa (administrativa, marketing ou producao) para a DRE"
+}
+
+export interface ProductRecipeItem {
+  inventoryItemId: string;    // ID do insumo vinculado
+  quantityNeeded: number;     // Quantidade necessária (ex: 150g, 0.5kg)
 }
 
 export interface ProductPriceCalc {
@@ -110,7 +149,34 @@ export interface ProductPriceCalc {
   otherCostsPct: number;    // Outros custos variáveis % (Comissões, Cartão, Embalagem)
   profitMarginPct: number;  // Margem líquida de lucro em %
   profitValue: number;      // Lucro líquido em R$
+  salesCount?: number;      // Contagem acumulada de vendas registradas na precificação
+  recipe?: ProductRecipeItem[]; // Ficha técnica: lista de insumos com quantidades
   userId: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  sku?: string;
+  currentQuantity: number;    // Quantidade atual em estoque
+  minQuantity: number;        // Quantidade mínima de segurança para emitir alertas
+  unit: 'g' | 'kg' | 'un';     // Claras unidades: gramas, quilos ou unidades
+  costPricePerUnit: number;   // Preço de custo unitário (por g, por kg, ou por unidade)
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DeveloperMessage {
+  id: string;
+  sender: 'user' | 'developer';
+  subject: string; // 'bug' | 'feature' | 'question' | 'layout' | 'appreciation' | 'other'
+  content: string;
+  userId: string;
+  userName?: string;
+  userEmail?: string;
+  createdAt: Date;
+  readByDeveloper?: boolean;
 }

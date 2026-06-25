@@ -55,6 +55,24 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "provider", "requestHash", "requestData", "responseText", "expiresAt", "createdAt"]
+    },
+    "InventoryItem": {
+      "title": "Inventory Item",
+      "description": "An input material or ingredient stored in inventory.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "sku": { "type": "string" },
+        "currentQuantity": { "type": "number" },
+        "minQuantity": { "type": "number" },
+        "unit": { "type": "string", "enum": ["g", "kg", "un"] },
+        "costPricePerUnit": { "type": "number" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "currentQuantity", "minQuantity", "unit", "costPricePerUnit", "userId"]
     }
   },
   "firestore": {
@@ -73,6 +91,10 @@
     "/users/{userId}/profile/settings": {
       "schema": "BusinessProfile",
       "description": "Business settings for the user."
+    },
+    "/users/{userId}/inventory/{itemId}": {
+      "schema": "InventoryItem",
+      "description": "Inventory items belong to a user."
     }
   }
 }

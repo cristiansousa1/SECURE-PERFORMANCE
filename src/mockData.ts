@@ -15,6 +15,8 @@ export const MOCK_CATEGORIES: Category[] = [
   { id: 'cat11', name: 'Tarifas Bancárias e Custos', type: 'expense', group: 'OTHER_EXPENSE', userId: 'demo' },
   { id: 'cat13', name: 'Infraestrutura de Nuvem / Servidores', type: 'expense', group: 'OPEX', userId: 'demo' },
   { id: 'cat14', name: 'Modelos e APIs de I.A. (OpenAI, Gemini)', type: 'expense', group: 'OPEX', userId: 'demo' },
+  { id: 'cat23', name: 'Despesas com Inteligência Artificial', type: 'expense', group: 'OPEX', userId: 'demo' },
+  { id: 'cat24', name: 'Custos de Infraestrutura de Nuvem', type: 'expense', group: 'OPEX', userId: 'demo' },
   { id: 'cat15', name: 'Consultoria e Auditorias Externas', type: 'expense', group: 'OPEX', userId: 'demo' },
   { id: 'cat16', name: 'Logística, Entregadores e APPs', type: 'expense', group: 'COGS', userId: 'demo' },
   { id: 'cat17', name: 'Insumos de Manutenção e Reparos', type: 'expense', group: 'OPEX', userId: 'demo' },
@@ -22,7 +24,8 @@ export const MOCK_CATEGORIES: Category[] = [
   { id: 'cat19', name: 'Honorários Contábeis e Fiscal', type: 'expense', group: 'OPEX', userId: 'demo' },
   { id: 'cat20', name: 'Impostos Municipais (ISS/IPTU)', type: 'expense', group: 'TAX', userId: 'demo' },
   { id: 'cat21', name: 'Treinamento e Capacitação Técnica', type: 'expense', group: 'OPEX', userId: 'demo' },
-  { id: 'cat22', name: 'Brindes & Sucesso do Cliente (CS)', type: 'expense', group: 'OPEX', userId: 'demo' }
+  { id: 'cat22', name: 'Brindes & Sucesso do Cliente (CS)', type: 'expense', group: 'OPEX', userId: 'demo' },
+  { id: 'cat25', name: 'CMV, custo de vendas', type: 'expense', group: 'COGS', userId: 'demo' }
 ];
 
 // Helper to calculate relative dates easily, supporting past months
@@ -39,349 +42,258 @@ const prevMonthDate = (day: number) => {
   return d;
 };
 
-export const MOCK_TRANSACTIONS: Transaction[] = [
-  // --- MÊS ATUAL ---
-  {
-    id: 't-curr-aporte-reserva',
-    description: 'Aporte Reserva: Reserva de Emergência',
-    amount: 100869,
-    categoryId: 'cat12',
-    date: currentMonthDate(15),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-1',
-    description: 'Vendas E-commerce Lote A',
-    amount: 28500,
-    categoryId: 'cat1',
-    date: currentMonthDate(2),
-    type: 'income',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-2',
-    description: 'Aluguel Escritório SP',
-    amount: 3200,
-    categoryId: 'cat3',
-    date: currentMonthDate(5),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-3',
-    description: 'Vendas Loja Física Matriz',
-    amount: 18300,
-    categoryId: 'cat1',
-    date: currentMonthDate(7),
-    type: 'income',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-4',
-    description: 'Fornecedor Insumos Embalagens',
-    amount: 4800,
-    categoryId: 'cat5',
-    date: currentMonthDate(10),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-5',
-    description: 'Contrato de Suporte Mensal Clientes',
-    amount: 19500,
-    categoryId: 'cat2',
-    date: currentMonthDate(12),
-    type: 'income',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-6',
-    description: 'Tráfego Pago Meta Ads',
-    amount: 2500,
-    categoryId: 'cat6',
-    date: currentMonthDate(15),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-7',
-    description: 'Matéria-prima Plásticos Ltda',
-    amount: 3900,
-    categoryId: 'cat5',
-    date: currentMonthDate(18),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-8',
-    description: 'Guia DAS Simples Nacional',
-    amount: 1450,
-    categoryId: 'cat7',
-    date: currentMonthDate(20),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-9',
-    description: 'Consultoria Estratégica Premium',
-    amount: 12200,
-    categoryId: 'cat2',
-    date: currentMonthDate(22),
-    type: 'income',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-10',
-    description: 'Folha de Pagamento + Benefícios',
-    amount: 13500,
-    categoryId: 'cat4',
-    date: currentMonthDate(25),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-11',
-    description: 'Assinatura AWS Cloud + CRM HubSpot',
-    amount: 685,
-    categoryId: 'cat8',
-    date: currentMonthDate(26),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-12',
-    description: 'Compra de Equipamentos TI de Ponta',
-    amount: 3100,
-    categoryId: 'cat9',
-    date: currentMonthDate(27),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-13',
-    description: 'Rendimento CDB Liquidez Diária',
-    amount: 950,
-    categoryId: 'cat10',
-    date: currentMonthDate(28),
-    type: 'income',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-curr-14',
-    description: 'Tarifas de Registro e Cobrança',
-    amount: 125,
-    categoryId: 'cat11',
-    date: currentMonthDate(29),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
+// Geração Dinâmica de Dados de 24 Meses Realistas (Simulação de uma PME com R$ 2.5MM/ano)
+const generate24MonthsMockTransactions = (): Transaction[] => {
+  const transactionsList: Transaction[] = [];
+  const now = new Date();
+  
+  for (let i = 0; i < 24; i++) {
+    const targetMonth = new Date(now.getFullYear(), now.getMonth() - i, 15);
+    const year = targetMonth.getFullYear();
+    const month = targetMonth.getMonth();
+    const monthKey = `${year}-${month}`;
+    const isCurrentMonth = i === 0;
 
-  // --- MÊS ANTERIOR ---
-  {
-    id: 't-prev-1',
-    description: 'Vendas E-commerce Lote Ant.',
-    amount: 25200,
-    categoryId: 'cat1',
-    date: prevMonthDate(2),
-    type: 'income',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-prev-2',
-    description: 'Aluguel Escritório SP',
-    amount: 3200,
-    categoryId: 'cat3',
-    date: prevMonthDate(5),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-prev-3',
-    description: 'Vendas Loja Física',
-    amount: 16800,
-    categoryId: 'cat1',
-    date: prevMonthDate(7),
-    type: 'income',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-prev-4',
-    description: 'Fornecedor Insumos Embalagens',
-    amount: 4600,
-    categoryId: 'cat5',
-    date: prevMonthDate(10),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-prev-5',
-    description: 'Contrato de Suporte Mensal Clientes',
-    amount: 17500,
-    categoryId: 'cat2',
-    date: prevMonthDate(12),
-    type: 'income',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-prev-6',
-    description: 'Tráfego Pago Google Ads',
-    amount: 2200,
-    categoryId: 'cat6',
-    date: prevMonthDate(15),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-prev-7',
-    description: 'Matéria-prima Plásticos Ltda',
-    amount: 3700,
-    categoryId: 'cat5',
-    date: prevMonthDate(18),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-prev-8',
-    description: 'Guia DAS Simples Nacional',
-    amount: 1250,
-    categoryId: 'cat7',
-    date: prevMonthDate(20),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-prev-9',
-    description: 'Consultoria Estratégica Premium',
-    amount: 11500,
-    categoryId: 'cat2',
-    date: prevMonthDate(22),
-    type: 'income',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-prev-10',
-    description: 'Folha de Pagamento + Benefícios',
-    amount: 13500,
-    categoryId: 'cat4',
-    date: prevMonthDate(25),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-prev-11',
-    description: 'Assinatura AWS Cloud + CRM HubSpot',
-    amount: 685,
-    categoryId: 'cat8',
-    date: prevMonthDate(26),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 't-prev-12',
-    description: 'Tarifas de Registro e Cobrança',
-    amount: 115,
-    categoryId: 'cat11',
-    date: prevMonthDate(29),
-    type: 'expense',
-    userId: 'demo',
-    createdAt: new Date(),
-    updatedAt: new Date()
+    // Faturamento base: R$ 210.000, com crescimento histórico sutil no decorrer dos meses (empresas mais antigas faturando um pouco menos orgonicamente)
+    const baseRevenue = 220000 - (i * 2000); 
+    
+    // Fatores de Sazonalidade Realista PJ
+    let seasonalFactor = 1.0;
+    if (month === 11) seasonalFactor = 1.35; // Dezembro (Pico de Festas de Fim de Ano & Varejo)
+    else if (month === 10) seasonalFactor = 1.18; // Novembro (Black Friday & Eventos)
+    else if (month === 0) seasonalFactor = 0.85; // Janeiro (Ressaca de mercado / início de ano)
+    else if (month === 1) seasonalFactor = 0.90; // Fevereiro (Carnaval / menos dias úteis)
+    else if (month === 5) seasonalFactor = 1.05; // Junho (Dia dos Namorados / Festas Juninas)
+    
+    const randomFactor = 0.93 + Math.random() * 0.14; // Oscilação sutil diária
+    const monthlyRevenueTotal = Math.round(baseRevenue * seasonalFactor * randomFactor);
+
+    // Divisão realista de faturamento: 70% Vendas Balcão / Salão Físico e 30% Delivery Aplicativos
+    const commerceRevenue = Math.round(monthlyRevenueTotal * 0.70);
+    const servicesRevenue = Math.round(monthlyRevenueTotal * 0.30);
+
+    // 1. Receitas
+    transactionsList.push({
+      id: `t-${monthKey}-rev-prod`,
+      description: `Vendas Balcão & Salão Físico (Burgers/Bebidas) - Competência ${month + 1}/${year}`,
+      amount: commerceRevenue,
+      categoryId: 'cat1',
+      date: isCurrentMonth ? currentMonthDate(10) : new Date(year, month, 10),
+      type: 'income',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    transactionsList.push({
+      id: `t-${monthKey}-rev-serv`,
+      description: `Faturamento Delivery Integrado iFood / Rappi - Competência ${month + 1}/${year}`,
+      amount: servicesRevenue,
+      categoryId: 'cat2',
+      date: isCurrentMonth ? currentMonthDate(15) : new Date(year, month, 15),
+      type: 'income',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Rendimento da Reserva do grupo (Proporcional ao caixa estimado acumulado)
+    transactionsList.push({
+      id: `t-${monthKey}-rev-cdb`,
+      description: 'Rendimento Diário CDB Liquidez - Tesouraria Smash',
+      amount: Math.round(1800 + (Math.random() * 600)),
+      categoryId: 'cat10',
+      date: isCurrentMonth ? currentMonthDate(28) : new Date(year, month, 28),
+      type: 'income',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // 2. Despesas
+    // Margem de Custo Variável Realista (CMV / Insumos / Logística): 34% sobre produtos
+    const cogsInsumos = Math.round(commerceRevenue * 0.30);
+    const cogsLogistica = Math.round(commerceRevenue * 0.04);
+
+    transactionsList.push({
+      id: `t-${monthKey}-exp-raw`,
+      description: `Compra de Insumos: Carnes Blend Angus, Pães e Laticínios`,
+      amount: cogsInsumos,
+      categoryId: 'cat5',
+      date: isCurrentMonth ? currentMonthDate(3) : new Date(year, month, 3),
+      type: 'expense',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    transactionsList.push({
+      id: `t-${monthKey}-exp-log`,
+      description: `Logística e Fretes de Distribuidoras (Hortifrúti e Descartáveis)`,
+      amount: cogsLogistica,
+      categoryId: 'cat16',
+      date: isCurrentMonth ? currentMonthDate(12) : new Date(year, month, 12),
+      type: 'expense',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Despesas Operacionais Fixas (OPEX)
+    // Folha de pagamento média: R$ 38.000 fixo + encargos
+    transactionsList.push({
+      id: `t-${monthKey}-exp-payroll`,
+      description: `Escala de Salários, Encargos CLT e Folha Operacional (Smashers / Garçons)`,
+      amount: 38500,
+      categoryId: 'cat4',
+      date: isCurrentMonth ? currentMonthDate(25) : new Date(year, month, 25),
+      type: 'expense',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Aluguel Escritório e Galpão SP (R$ 6.800 fixo)
+    transactionsList.push({
+      id: `t-${monthKey}-exp-rent`,
+      description: `Locação Ponto Comercial (Hamburgueria Pinheiros SP)`,
+      amount: 6800,
+      categoryId: 'cat3',
+      date: isCurrentMonth ? currentMonthDate(5) : new Date(year, month, 5),
+      type: 'expense',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Marketing e Tráfego Pago (Aproximadamente 9% das receitas para escalar crescimento)
+    const marketingBudget = Math.round(monthlyRevenueTotal * 0.09);
+    transactionsList.push({
+      id: `t-${monthKey}-exp-mkt`,
+      description: `Campanhas Meta Ads Geolocalizadas & Ativações de Influenciadores`,
+      amount: marketingBudget,
+      categoryId: 'cat6',
+      date: isCurrentMonth ? currentMonthDate(18) : new Date(year, month, 18),
+      type: 'expense',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Imposto (Guia DAS do Simples Nacional - 6% do faturamento total do mês anterior/atual)
+    const taxPayment = Math.round(monthlyRevenueTotal * 0.06);
+    transactionsList.push({
+      id: `t-${monthKey}-exp-tax`,
+      description: `Guia Unificada DAS Simples Nacional - Impostos Simples`,
+      amount: taxPayment,
+      categoryId: 'cat7',
+      date: isCurrentMonth ? currentMonthDate(20) : new Date(year, month, 20),
+      type: 'expense',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // APIs, Nuvem e Infra (AWS + Licenças SaaS + Modelos de IA): R$ 4.500 no total
+    transactionsList.push({
+      id: `t-${monthKey}-exp-cloud`,
+      description: `Licença do Softwares de Frente de Caixa (PDV) & Sistema KDS`,
+      amount: 1950,
+      categoryId: 'cat8',
+      date: isCurrentMonth ? currentMonthDate(21) : new Date(year, month, 21),
+      type: 'expense',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    transactionsList.push({
+      id: `t-${monthKey}-exp-ai-services`,
+      description: 'Tokens de CRM Inteligente & Recomendações de Vendas Dafne I.A.',
+      amount: 2840,
+      categoryId: 'cat14',
+      date: isCurrentMonth ? currentMonthDate(26) : new Date(year, month, 26),
+      type: 'expense',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Reservas de Emergência corporativas sistemáticas (Aporte mensal de investimentos)
+    transactionsList.push({
+      id: `t-${monthKey}-exp-reserve`,
+      description: `Retenção Estratégica: Alocação em Reserva Hamburgueria`,
+      amount: Math.round(monthlyRevenueTotal * 0.05),
+      categoryId: 'cat12',
+      date: isCurrentMonth ? currentMonthDate(28) : new Date(year, month, 28),
+      type: 'expense',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Brindes / Honorários e Outras Despesas Corporativas
+    transactionsList.push({
+      id: `t-${monthKey}-exp-others`,
+      description: `Honorários Contábeis, Gestão Financeira e Manutenções de Chapas`,
+      amount: 2200,
+      categoryId: 'cat11',
+      date: isCurrentMonth ? currentMonthDate(29) : new Date(year, month, 29),
+      type: 'expense',
+      userId: 'demo',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
   }
-];
+
+  return transactionsList;
+};
+
+export const MOCK_TRANSACTIONS: Transaction[] = generate24MonthsMockTransactions();
 
 export const MOCK_BILLS = [
   {
     id: 'b1',
-    description: 'Embalagens de Papelão Lote 3',
+    description: 'Embalagens Térmicas & Sacolas Kraft Delivery',
     amount: 1500,
-    dueDate: '2026-05-22', // em 2 dias
+    dueDate: '2026-06-28', // futuro confortável
     installments: 3,
     boletoBarcode: '00190.00009 02345.678903 12345.678901 5 99230000150000',
     status: 'pending' as const,
     userId: 'demo',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    expenseCategory: 'production' as const
   },
   {
     id: 'b2',
-    description: 'Aluguel do Galpão Logístico',
+    description: 'Ajuste de Locação Ponto de Venda Pinheiros',
     amount: 4500,
-    dueDate: '2026-05-27', // em 7 dias
+    dueDate: '2026-06-25', // futuro confortável
     installments: 1,
     boletoBarcode: '34191.79001 01043.513184 91020.150008 7 98450000450000',
     status: 'pending' as const,
     userId: 'demo',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    expenseCategory: 'administrative' as const
   },
   {
     id: 'b3',
-    description: 'Servidor Dedicado Cloud Backup',
+    description: 'Mensalidade Sistema PDV & KDS de Cozinha',
     amount: 480,
-    dueDate: '2026-05-18', // atrasado
+    dueDate: '2026-05-18', 
     installments: 12,
     boletoBarcode: '03399.08702 34001.222333 44101.999888 1 97220000048000',
-    status: 'overdue' as const,
+    status: 'paid' as const, // pago
     userId: 'demo',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    expenseCategory: 'administrative' as const
   },
   {
     id: 'b4',
-    description: 'Consultoria Contábil Mensal',
+    description: 'Honorários Contábeis Especiais Simples Nacional',
     amount: 800,
     dueDate: '2026-05-10', // pago
     installments: 1,
@@ -389,6 +301,8 @@ export const MOCK_BILLS = [
     status: 'paid' as const,
     userId: 'demo',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    expenseCategory: 'administrative' as const
   }
 ];
+

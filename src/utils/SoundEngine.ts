@@ -96,21 +96,21 @@ class SoundEngine {
   }
 
   /**
-   * Ultra-fast high-frequency cyber click for button focus/presses
+   * Ultra-fast high-frequency cyber click for button focus/presses (soft & warm pop)
    */
   public playClick() {
-    this.playTone([800, 1500], [0.03], "triangle", [0.08, 0.001]);
+    this.playTone([600, 750], [0.025], "sine", [0.03, 0.0001]);
   }
 
   /**
-   * Shorter high-precision tick for data tables, metrics, typing simulation
+   * Shorter high-precision tick for data tables, metrics, typing simulation (delicate & subtle)
    */
   public playTick() {
-    this.playTone([2400, 4800], [0.015], "sine", [0.05, 0.001]);
+    this.playTone([1000, 1200], [0.012], "sine", [0.012, 0.0001]);
   }
 
   /**
-   * Ascending, rich synthetic triadic arpeggio with high clarity (for successes, saves)
+   * Ascending, rich synthetic triadic arpeggio with high clarity (for successes, saves) (softer & elegant)
    */
   public playSuccess() {
     if (this.getMuted()) return;
@@ -119,8 +119,8 @@ class SoundEngine {
 
     try {
       const now = ctx.currentTime;
-      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-      const delay = 0.06;
+      const notes = [440.00, 554.37, 659.25, 880.00]; // A4, C#5, E5, A5 (Major arpeggio, very peaceful)
+      const delay = 0.055;
 
       notes.forEach((freq, idx) => {
         const osc = ctx.createOscillator();
@@ -130,14 +130,14 @@ class SoundEngine {
         osc.frequency.setValueAtTime(freq, now + idx * delay);
 
         gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(0.12, now + idx * delay + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * delay + 0.35);
+        gain.gain.exponentialRampToValueAtTime(0.03, now + idx * delay + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * delay + 0.3);
 
         osc.connect(gain);
         gain.connect(ctx.destination);
 
         osc.start(now + idx * delay);
-        osc.stop(now + idx * delay + 0.4);
+        osc.stop(now + idx * delay + 0.35);
       });
     } catch (e) {
       console.warn("Sound play failure:", e);
@@ -145,7 +145,7 @@ class SoundEngine {
   }
 
   /**
-   * Sci-fi sweeping frequency pitch ramp symbolizing artificial intelligence deep calculation
+   * Sci-fi sweeping frequency pitch ramp symbolizing artificial intelligence deep calculation (calm sine waves)
    */
   public playCalculationSweep() {
     if (this.getMuted()) return;
@@ -159,26 +159,26 @@ class SoundEngine {
       const filterNode = ctx.createBiquadFilter();
       const mainGain = ctx.createGain();
 
-      // Main Sweeper
-      mainOsc.type = "triangle";
-      mainOsc.frequency.setValueAtTime(150, now);
-      mainOsc.frequency.exponentialRampToValueAtTime(1600, now + 0.65);
-      mainOsc.frequency.exponentialRampToValueAtTime(800, now + 1.1);
+      // Main Sweeper (sine wave instead of triangle)
+      mainOsc.type = "sine";
+      mainOsc.frequency.setValueAtTime(180, now);
+      mainOsc.frequency.exponentialRampToValueAtTime(800, now + 0.65);
+      mainOsc.frequency.exponentialRampToValueAtTime(500, now + 1.1);
 
       // Low end Sub for raw physical feel
       subOsc.type = "sine";
-      subOsc.frequency.setValueAtTime(80, now);
-      subOsc.frequency.linearRampToValueAtTime(220, now + 0.82);
+      subOsc.frequency.setValueAtTime(65, now);
+      subOsc.frequency.linearRampToValueAtTime(150, now + 0.82);
 
       // Cyber Bandpass filter sweep
       filterNode.type = "bandpass";
-      filterNode.Q.setValueAtTime(5.0, now);
-      filterNode.frequency.setValueAtTime(300, now);
-      filterNode.frequency.exponentialRampToValueAtTime(2800, now + 0.7);
-      filterNode.frequency.exponentialRampToValueAtTime(500, now + 1.1);
+      filterNode.Q.setValueAtTime(4.0, now);
+      filterNode.frequency.setValueAtTime(250, now);
+      filterNode.frequency.exponentialRampToValueAtTime(1500, now + 0.7);
+      filterNode.frequency.exponentialRampToValueAtTime(400, now + 1.1);
 
       mainGain.gain.setValueAtTime(0.0001, now);
-      mainGain.gain.linearRampToValueAtTime(0.18, now + 0.25);
+      mainGain.gain.linearRampToValueAtTime(0.04, now + 0.25);
       mainGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.25);
 
       mainOsc.connect(filterNode);
@@ -196,7 +196,7 @@ class SoundEngine {
   }
 
   /**
-   * Elegant double-beep synthesized signature when Daphne sends a message or completes audit
+   * Elegant double-beep synthesized signature when Daphne sends a message or completes audit (lower volume, pleasant frequency)
    */
   public playAiNotification() {
     if (this.getMuted()) return;
@@ -205,31 +205,31 @@ class SoundEngine {
 
     try {
       const now = ctx.currentTime;
-      // Tone 1: 880Hz (A5)
+      // Tone 1: 659.25Hz (E5)
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       osc1.type = "sine";
-      osc1.frequency.setValueAtTime(880, now);
-      gain1.gain.setValueAtTime(0.08, now);
-      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+      osc1.frequency.setValueAtTime(659.25, now);
+      gain1.gain.setValueAtTime(0.025, now);
+      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
       osc1.connect(gain1);
       gain1.connect(ctx.destination);
       osc1.start(now);
-      osc1.stop(now + 0.15);
+      osc1.stop(now + 0.12);
 
-      // Tone 2: 1318.51Hz (E6) with a delay
-      const delay = 0.085;
+      // Tone 2: 880Hz (A5) with a delay
+      const delay = 0.075;
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.type = "sine";
-      osc2.frequency.setValueAtTime(1318.51, now + delay);
+      osc2.frequency.setValueAtTime(880, now + delay);
       gain2.gain.setValueAtTime(0.001, now);
-      gain2.gain.setValueAtTime(0.08, now + delay);
-      gain2.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.35);
+      gain2.gain.setValueAtTime(0.025, now + delay);
+      gain2.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.25);
       osc2.connect(gain2);
       gain2.connect(ctx.destination);
       osc2.start(now + delay);
-      osc2.stop(now + delay + 0.35);
+      osc2.stop(now + delay + 0.25);
 
     } catch (e) {
       console.warn("AiNotification sound failure:", e);
@@ -237,27 +237,27 @@ class SoundEngine {
   }
 
   /**
-   * Dual-tone telemetry sonar pulse for active UI changes or page loads
+   * Dual-tone telemetry sonar pulse for active UI changes or page loads (softer)
    */
   public playActivePulse() {
-    this.playTone([660, 440], [0.18], "sine", [0.08, 0.001]);
+    this.playTone([523.25, 392], [0.15], "sine", [0.025, 0.001]);
   }
 
   /**
-   * Dynamic cyber whistle/swell for cash flow entries (ascending for income, descending for expense)
+   * Dynamic cyber whistle/swell for cash flow entries (soft sine wave)
    */
   public playTransactionSwell(type: "income" | "expense") {
     if (type === "income") {
       // Ascending pleasant swell
-      this.playTone([350, 950], [0.2], "sine", [0.12, 0.001]);
+      this.playTone([350, 600], [0.18], "sine", [0.03, 0.001]);
     } else {
-      // Descending warning swell
-      this.playTone([700, 200], [0.22], "triangle", [0.08, 0.001]);
+      // Descending warning swell (soft sine)
+      this.playTone([500, 300], [0.18], "sine", [0.025, 0.001]);
     }
   }
 
   /**
-   * Dual-harmonic digital chime warning for critical cash levels or limit alerts
+   * Dual-harmonic digital chime warning for critical cash levels or limit alerts (calmer & less buzzy)
    */
   public playCriticalAlert() {
     if (this.getMuted()) return;
@@ -266,21 +266,21 @@ class SoundEngine {
 
     try {
       const now = ctx.currentTime;
-      const freqs = [330, 495]; // E4, B4 (perfect fifth dissonance warning)
+      const freqs = [329.63, 392.00]; // E4, G4 (Minor third interval, softer alert, no sawtooth)
 
       freqs.forEach((freq) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = "sawtooth"; // buzzier wave
+        osc.type = "sine";
         osc.frequency.setValueAtTime(freq, now);
         
         // Slight low pass filter to avoid harshness
         const filter = ctx.createBiquadFilter();
         filter.type = "lowpass";
-        filter.frequency.setValueAtTime(700, now);
+        filter.frequency.setValueAtTime(500, now);
 
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+        gain.gain.setValueAtTime(0.02, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
 
         osc.connect(filter);
         filter.connect(gain);
@@ -325,28 +325,100 @@ class SoundEngine {
 
       const utterance = new SpeechSynthesisUtterance(cleaned);
       utterance.lang = "pt-BR";
-      utterance.rate = 1.10; // Unified Jennifer pitch rate
-      utterance.pitch = 1.15; // Beautiful and clear feminine tone signature (Jennifer)
+
+      // Read pitch, rate, and voice name configured by user or default to feminine values
+      const savedPitch = localStorage.getItem("dafne_voice_pitch");
+      const savedRate = localStorage.getItem("dafne_voice_rate");
+      const savedVoiceName = localStorage.getItem("dafne_selected_voice") || "";
+      const savedVolume = localStorage.getItem("dafne_voice_volume");
+      let volumeVal = savedVolume ? parseFloat(savedVolume) : 0.40;
+      if (volumeVal === 1.0) {
+        localStorage.setItem("dafne_voice_volume", "0.40");
+        volumeVal = 0.40;
+      }
+
+      utterance.rate = savedRate ? parseFloat(savedRate) : 1.10; // Unified Jennifer pitch rate
+      utterance.pitch = savedPitch ? parseFloat(savedPitch) : 1.15; // Beautiful and clear feminine tone signature (Jennifer)
+      utterance.volume = volumeVal;
 
       // Locate pt-BR voices
       const voices = window.speechSynthesis.getVoices();
-      const ptBrVoices = voices.filter(v => v.lang.replace("_", "-").startsWith("pt"));
-
-      // Prioritize high-fidelity, neural, natural, or Google/Microsoft female voices
-      const preferred = ptBrVoices.find(v => 
-        v.name.includes("Google") || 
-        v.name.includes("Natural") || 
-        v.name.toLowerCase().includes("maria") || 
-        v.name.toLowerCase().includes("neural") ||
-        v.name.toLowerCase().includes("luciana") ||
-        v.name.toLowerCase().includes("francisca")
+      const ptBrVoices = voices.filter(v => 
+        v.lang.toLowerCase().includes("pt-br") || 
+        v.lang.toLowerCase().startsWith("pt")
       );
-      const fallback = ptBrVoices[0] || null;
 
-      if (preferred) {
-        utterance.voice = preferred;
-      } else if (fallback) {
-        utterance.voice = fallback;
+      let chosenVoice: SpeechSynthesisVoice | null = null;
+
+      if (ptBrVoices.length > 0) {
+        // 1. Explicitly configured voice selected by user
+        if (savedVoiceName) {
+          chosenVoice = ptBrVoices.find(v => v.name === savedVoiceName) || null;
+        }
+
+        // 2. High-quality natural premium female voice search
+        if (!chosenVoice) {
+          chosenVoice = ptBrVoices.find(v => {
+            const name = v.name.toLowerCase();
+            return name.includes("natural") && (
+              name.includes("maria") || 
+              name.includes("francisca") || 
+              name.includes("google") || 
+              name.includes("female") || 
+              name.includes("mulher") || 
+              name.includes("suave")
+            );
+          }) || null;
+        }
+
+        // 3. Known system classic/premium female voices in Portuguese
+        if (!chosenVoice) {
+          chosenVoice = ptBrVoices.find(v => {
+            const name = v.name.toLowerCase();
+            return name.includes("maria") || 
+                   name.includes("francisca") || 
+                   name.includes("heloisa") || 
+                   name.includes("heloísa") || 
+                   name.includes("luciana") || 
+                   name.includes("victoria") || 
+                   name.includes("vitoria") || 
+                   name.includes("vitória") || 
+                   name.includes("fernanda") || 
+                   name.includes("priscilla") || 
+                   name.includes("helena") || 
+                   name.includes("zoraida") || 
+                   name.includes("female") || 
+                   name.includes("mulher") || 
+                   name.includes("suave");
+          }) || null;
+        }
+
+        // 4. Default high-quality Google voice
+        if (!chosenVoice) {
+          chosenVoice = ptBrVoices.find(v => {
+            const name = v.name.toLowerCase();
+            return name.includes("google") && (
+              name.includes("português") || 
+              name.includes("portuguese") || 
+              name.includes("br") || 
+              name.includes("brasil")
+            );
+          }) || null;
+        }
+
+        // 5. Fallback of any pt-BR
+        if (!chosenVoice) {
+          chosenVoice = ptBrVoices.find(v => v.lang.toLowerCase().includes("pt-br")) || null;
+        }
+
+        // 6. First pt voice
+        if (!chosenVoice) {
+          chosenVoice = ptBrVoices[0];
+        }
+      }
+
+      if (chosenVoice) {
+        utterance.voice = chosenVoice;
       }
 
       if (onStart) utterance.onstart = onStart;

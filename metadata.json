@@ -1,5 +1,5 @@
 {
-  "name": "Gestor de Performance & Segurança AI",
+  "name": "MaxPerformance Business",
   "description": "Plataforma avançada de gestão de performance empresarial de alta tecnologia e controle blindado de integridade e criptosegurança de dados.",
   "requestFramePermissions": ["microphone", "geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

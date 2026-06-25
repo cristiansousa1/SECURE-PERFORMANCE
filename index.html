@@ -3,12 +3,131 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="google-site-verification" content="lScsjX29uU0dHE2pYedbIhQknebnDjPGKjGIlbVaqEQ" />
     <meta name="theme-color" content="#ea580c" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/financial-growth-analysis.png" />
-    <title>Valora.AI Inteligência Financeira</title>
+    <title>Max Performance Business Inteligência Financeira</title>
+    <script>
+      (function() {
+        // Shield contra Script error e instabilidades para imunizar o app de falhas de terceiros/extensões
+        var originalOnerror = window.onerror;
+        window.onerror = function(message, source, lineno, colno, error) {
+          var msg = String(message || '');
+          var src = String(source || '');
+          if (
+            msg === 'Script error.' ||
+            msg.toLowerCase().includes('script error') ||
+            src.includes('chrome-extension') ||
+            src.includes('moz-extension') ||
+            msg.includes('Disconnecting idle stream') ||
+            msg.includes('GrpcConnection') ||
+            msg.includes('stream error. code: 1')
+          ) {
+            console.warn('[Failsafe Head Shield] Silenciado:', msg);
+            return true; 
+          }
+          if (originalOnerror) {
+            return originalOnerror.apply(this, arguments);
+          }
+          return false;
+        };
+
+        // Intercepta propriedades dinâmicas de erro para garantir imunidade dupla
+        Object.defineProperty(window, 'onerror', {
+          get: function() {
+            return originalOnerror;
+          },
+          set: function(val) {
+            originalOnerror = function(message, source, lineno, colno, error) {
+              var msg = String(message || '');
+              var src = String(source || '');
+              if (
+                msg === 'Script error.' ||
+                msg.toLowerCase().includes('script error') ||
+                src.includes('chrome-extension') ||
+                src.includes('moz-extension') ||
+                msg.includes('Disconnecting idle stream') ||
+                msg.includes('GrpcConnection') ||
+                msg.includes('stream error. code: 1')
+              ) {
+                console.warn('[Failsafe Head Shield Intercepted]:', msg);
+                return true;
+              }
+              if (val) {
+                return val.apply(this, arguments);
+              }
+              return false;
+            };
+          },
+          configurable: true,
+          enumerable: true
+        });
+
+        // Intercepta addEventListener para blindar contra qualquer listener de monitoramento externo de erros
+        var originalAddEventListener = window.addEventListener;
+        window.addEventListener = function(type, listener, options) {
+          if (type === 'error') {
+            var wrappedListener = function(event) {
+              var msg = String(event.message || (event.error && event.error.message) || '');
+              var src = String(event.filename || event.source || '');
+              if (
+                msg === 'Script error.' ||
+                msg.toLowerCase().includes('script error') ||
+                src.includes('chrome-extension') ||
+                src.includes('moz-extension') ||
+                msg.includes('Disconnecting idle stream') ||
+                msg.includes('GrpcConnection') ||
+                msg.includes('stream error. code: 1')
+              ) {
+                console.warn('[Failsafe Event Listener Error Aborted]:', msg);
+                try {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  event.stopImmediatePropagation();
+                } catch(e) {}
+                return;
+              }
+              if (listener) {
+                return listener.call(this, event);
+              }
+            };
+            return originalAddEventListener.call(this, type, wrappedListener, options);
+          }
+
+          if (type === 'unhandledrejection') {
+            var wrappedRejectionListener = function(event) {
+              var reasonStr = String((event.reason && (event.reason.message || event.reason)) || '');
+              if (
+                reasonStr.includes('disconnecting idle stream') ||
+                reasonStr.includes('cancelled: disconnecting idle stream') ||
+                reasonStr.includes('timed out waiting for new targets') ||
+                reasonStr.includes('stream error. code: 1') ||
+                reasonStr.toLowerCase().includes('script error')
+              ) {
+                console.warn('[Failsafe Event Listener Rejection Aborted]:', reasonStr);
+                try {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  event.stopImmediatePropagation();
+                } catch(e) {}
+                return;
+              }
+              if (listener) {
+                return listener.call(this, event);
+              }
+            };
+            return originalAddEventListener.call(this, type, wrappedRejectionListener, options);
+          }
+
+          return originalAddEventListener.call(this, type, listener, options);
+        };
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

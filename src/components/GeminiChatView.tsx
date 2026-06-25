@@ -50,20 +50,33 @@ import {
 } from "lucide-react";
 import { sound } from "../utils/SoundEngine";
 import { AbntPdfDocument } from "../utils/pdfAbntHelper";
+import GeminiLiveCall from "./GeminiLiveCall";
 
 interface Message {
-  sender: "user" | "gemini";
-  text: string;
+  sender: "user" | "gemini" | string;
+  text: any;
   timestamp: Date;
-  simulatedTier?: "flash" | "pro" | "quantum";
+  simulatedTier?: "flash" | "pro" | "quantum" | string;
   simulatedTemp?: number;
   engineName?: string;
+  groundingMetadata?: any;
   telemetry?: {
     tokens: number;
     responseTimeMs: number;
     confidence: number;
     synapsesMap: string;
   };
+  strategicDiagnosis?: {
+    diagnosisText?: string;
+    identifiedBottleneck?: string;
+    priorityLabel?: 'low' | 'medium' | 'high' | 'critical' | string;
+    metricHighlights?: Array<{
+      label: string;
+      value: string | number;
+      status: 'success' | 'warning' | 'error' | string;
+    }>;
+    proposedActionList?: string[];
+  } | null;
 }
 
 // Interactive Real-Time Canvas Neural Waves Visualizer
@@ -176,8 +189,281 @@ export default function GeminiChatView() {
     showToast,
     getDRE,
     bills,
-    products
+    products,
+    user,
+    addTransaction
   } = useFinance();
+
+  // Client-side simple fallback NLP parsing
+  const parseClientTransactionFallback = (msg: string) => {
+    const lower = msg.toLowerCase();
+    
+    // Help extract amount
+    const extractPortugueseMoney = (text: string): number | null => {
+      const clean = (text || "").toLowerCase();
+      const regex = /(?:r\$|rs|\$)?\s*([0-9]+[0-9.,]*)/gi;
+      let match;
+      let candidates: number[] = [];
+      
+      while ((match = regex.exec(clean)) !== null) {
+        let rawNum = match[1];
+        while (rawNum && /[.,]/.test(rawNum[rawNum.length - 1])) {
+          rawNum = rawNum.slice(0, -1);
+        }
+        if (!rawNum) continue;
+        
+        if (rawNum.includes(".") && rawNum.includes(",")) {
+          const dotIdx = rawNum.lastIndexOf(".");
+          const commaIdx = rawNum.lastIndexOf(",");
+          if (commaIdx > dotIdx) {
+            const normalized = rawNum.replace(/\./g, "").replace(",", ".");
+            const val = parseFloat(normalized);
+            if (!isNaN(val)) candidates.push(val);
+          } else {
+            const normalized = rawNum.replace(/,/g, "");
+            const val = parseFloat(normalized);
+            if (!isNaN(val)) candidates.push(val);
+          }
+        } else if (rawNum.includes(",")) {
+          const parts = rawNum.split(",");
+          if (parts.length === 2 && parts[1].length === 2) {
+            const normalized = rawNum.replace(",", ".");
+            const val = parseFloat(normalized);
+            if (!isNaN(val)) candidates.push(val);
+          } else if (parts.length === 2 && parts[1].length === 3) {
+            const normalized = rawNum.replace(",", "");
+            const val = parseFloat(normalized);
+            if (!isNaN(val)) candidates.push(val);
+          } else {
+            const normalized = rawNum.replace(",", ".");
+            const val = parseFloat(normalized);
+            if (!isNaN(val)) candidates.push(val);
+          }
+        } else if (rawNum.includes(".")) {
+          const parts = rawNum.split(".");
+          if (parts.length === 2 && parts[1].length === 3) {
+            const normalized = rawNum.replace(/\./g, "");
+            const val = parseFloat(normalized);
+            if (!isNaN(val)) candidates.push(val);
+          } else {
+            const val = parseFloat(rawNum);
+            if (!isNaN(val)) candidates.push(val);
+          }
+        } else {
+          const val = parseFloat(rawNum);
+          if (!isNaN(val)) candidates.push(val);
+        }
+      }
+      
+      return candidates.length > 0 ? candidates[0] : null;
+    };
+
+    const val = extractPortugueseMoney(lower);
+    if (!val || val <= 0) return null;
+
+    const isExpense = lower.includes("paguei") || lower.includes("pagou") || lower.includes("pago") || 
+                      lower.includes("pagar") || lower.includes("pagamento") || lower.includes("pagamentos") ||
+                      lower.includes("gastei") || lower.includes("gastou") || lower.includes("gasto") || lower.includes("gastos") ||
+                      lower.includes("custo") || lower.includes("custos") || 
+                      lower.includes("despesa") || lower.includes("despesas") ||
+                      lower.includes("compra") || lower.includes("compras") || lower.includes("comprei") || lower.includes("comprou") ||
+                      lower.includes("perdi") || lower.includes("perda") || lower.includes("perdas") ||
+                      lower.includes("insumo") || lower.includes("insumos") ||
+                      lower.includes("fatura") || lower.includes("faturas") ||
+                      lower.includes("frete") || lower.includes("fretes") || lower.includes("entrega") || lower.includes("entregas") ||
+                      lower.includes("saída") || lower.includes("saida") || lower.includes("saídas") || lower.includes("saidas") ||
+                      lower.includes("mensalidade") || lower.includes("mensalidades") ||
+                      lower.includes("taxa") || lower.includes("taxas") || lower.includes("tarifa") || lower.includes("tarifas") ||
+                      lower.includes("imposto") || lower.includes("impostos") || lower.includes("simples nacional") || lower.includes("das") ||
+                      lower.includes("aluguel") || lower.includes("luz") || lower.includes("água") || lower.includes("agua") || 
+                      lower.includes("energia") || lower.includes("internet") || lower.includes("telefone") ||
+                      lower.includes("salário") || lower.includes("salario") || lower.includes("salários") || lower.includes("salarios") ||
+                      lower.includes("pró-labore") || lower.includes("pro-labore") || lower.includes("pro labore") ||
+                      lower.includes("anúncio") || lower.includes("anuncio") || lower.includes("anúncios") || lower.includes("anuncios") || 
+                      lower.includes("marketing") || lower.includes("ads") || lower.includes("facebook") || lower.includes("instagram") ||
+                      lower.includes("software") || lower.includes("sistema") || lower.includes("api") || lower.includes("tokens");
+
+    const isRevenue = lower.includes("venda") || lower.includes("vendeu") || lower.includes("vendas") || lower.includes("vendi") || 
+                      lower.includes("recebi") || lower.includes("recebeu") || lower.includes("recebimento") || lower.includes("recebimentos") ||
+                      lower.includes("faturei") || lower.includes("faturou") || lower.includes("faturamento") ||
+                      lower.includes("ganhei") || lower.includes("ganhou") || 
+                      lower.includes("receita") || lower.includes("receitas") ||
+                      lower.includes("entrada") || lower.includes("entradas");
+
+    if (isRevenue) {
+      let categoryName = "Venda de Produtos";
+      if (lower.includes("serviço") || lower.includes("servico") || lower.includes("serviços") || lower.includes("servicos") || lower.includes("consultoria")) {
+        categoryName = "Prestação de Serviços";
+      }
+      return {
+        description: "Venda registrada automaticamente (Modo Chat)",
+        amount: val,
+        type: "income" as "income" | "expense",
+        categoryName
+      };
+    } else if (isExpense) {
+      let categoryName = "Compra de Mercadoria";
+      if (lower.includes("insumo") || lower.includes("insumos") || lower.includes("matéria prima") || lower.includes("materia prima")) {
+        categoryName = "Compra de Mercadoria";
+      } else if (lower.includes("luz") || lower.includes("energia") || lower.includes("água") || lower.includes("agua") || lower.includes("utilidade") || lower.includes("internet") || lower.includes("telefone")) {
+        categoryName = "Energia / Água / Utilidades";
+      } else if (lower.includes("anúncio") || lower.includes("anuncio") || lower.includes("anúncios") || lower.includes("anuncios") || lower.includes("marketing") || lower.includes("insta") || lower.includes("facebook") || lower.includes("ads")) {
+        categoryName = "Marketing / Tráfego Pago";
+      } else if (lower.includes("aluguel") || lower.includes("escritório") || lower.includes("galpão") || lower.includes("galpao")) {
+        categoryName = "Aluguel Escritório / Galpão";
+      } else if (lower.includes("frete") || lower.includes("entrega") || lower.includes("entregas") || lower.includes("logística") || lower.includes("logistica")) {
+        categoryName = "Fretes";
+      } else if (lower.includes("das") || lower.includes("simples") || lower.includes("imposto") || lower.includes("impostos")) {
+        categoryName = "DAS / Simples Nacional";
+      } else if (lower.includes("salário") || lower.includes("salario") || lower.includes("salários") || lower.includes("salarios") || lower.includes("pró-labore") || lower.includes("pro-labore") || lower.includes("pro labore")) {
+        categoryName = "Salários e Encargos";
+      } else if (lower.includes("software") || lower.includes("sistema") || lower.includes("saas") || lower.includes("mensalidade") || lower.includes("assinatura")) {
+        categoryName = "Software / Assinaturas SaaS";
+      } else if (lower.includes("tarifa") || lower.includes("tarifas") || lower.includes("taxa") || lower.includes("taxas") || lower.includes("banco") || lower.includes("bancária") || lower.includes("bancaria") || lower.includes("gateway")) {
+        categoryName = "Tarifas Bancárias e Gateway";
+      } else if (lower.includes("api") || lower.includes("openai") || lower.includes("gemini") || lower.includes("tokens") || lower.includes("inteligência") || lower.includes("inteligencia")) {
+        categoryName = "Modelos e APIs de I.A. (OpenAI, Gemini)";
+      }
+      return {
+        description: "Despesa registrada automaticamente (Modo Chat)",
+        amount: val,
+        type: "expense" as "income" | "expense",
+        categoryName
+      };
+    }
+    return null;
+  };
+
+  // Perform transaction logging inside context database
+  const handleAutomaticTransactionLogging = async (detected: any) => {
+    if (!detected || !detected.amount || !detected.type || !detected.categoryName) return;
+    
+    try {
+      const type = detected.type === "income" ? "income" : "expense";
+      const incomingName = detected.categoryName.toLowerCase().trim();
+      
+      const possibleCategories = categories.filter(c => c.type === type);
+      let match = possibleCategories.find(c => c.name.toLowerCase() === incomingName);
+      
+      if (!match) {
+        const isMateriaPrimaOrCompra = incomingName.includes("materia") || incomingName.includes("matéria") || 
+                                       incomingName.includes("compra") || incomingName.includes("mercadoria") || 
+                                       incomingName.includes("insumo") || incomingName.includes("estoque");
+        const isSales = incomingName.includes("venda") || incomingName.includes("vendas") || incomingName.includes("receita");
+        const isService = incomingName.includes("serviço") || incomingName.includes("servico");
+        const isMarketing = incomingName.includes("marketing") || incomingName.includes("trafego") || incomingName.includes("tráfego") || incomingName.includes("anúncio") || incomingName.includes("anuncio") || incomingName.includes("ads") || incomingName.includes("insta") || incomingName.includes("facebook");
+        const isSoftware = incomingName.includes("software") || incomingName.includes("saas") || incomingName.includes("assinatura") || incomingName.includes("sistema");
+        const isTax = incomingName.includes("das") || incomingName.includes("simples nacional") || incomingName.includes("imposto") || incomingName.includes("tributo");
+        const isRent = incomingName.includes("aluguel") || incomingName.includes("escritório") || incomingName.includes("galpão") || incomingName.includes("galpao");
+        const isSalary = incomingName.includes("salário") || incomingName.includes("salario") || incomingName.includes("encargo") || incomingName.includes("folha") || incomingName.includes("pessoal") || incomingName.includes("pró-labore") || incomingName.includes("pro-labore") || incomingName.includes("pro labore");
+        const isUtility = incomingName.includes("luz") || incomingName.includes("água") || incomingName.includes("agua") || incomingName.includes("energia") || incomingName.includes("utilidade") || incomingName.includes("internet") || incomingName.includes("telefone");
+        const isBank = incomingName.includes("tarifa") || incomingName.includes("taxa") || incomingName.includes("bancária") || incomingName.includes("bancaria") || incomingName.includes("banco");
+        const isFreight = incomingName.includes("frete") || incomingName.includes("logística") || incomingName.includes("logistica") || incomingName.includes("entrega");
+        const isIA = incomingName.includes("openai") || incomingName.includes("gemini") || incomingName.includes("tokens") || incomingName.includes("api") || incomingName.includes("inteligência") || incomingName.includes("inteligencia") || incomingName.includes("ia") || incomingName.includes("i.a.");
+
+        if (isMateriaPrimaOrCompra) {
+          match = possibleCategories.find(c => {
+            const n = c.name.toLowerCase();
+            return n.includes("compra") || n.includes("mercadoria") || n.includes("materia") || n.includes("matéria") || n.includes("insumo");
+          });
+        }
+        if (!match && isSales) {
+          match = possibleCategories.find(c => c.name.toLowerCase().includes("venda"));
+        }
+        if (!match && isService) {
+          match = possibleCategories.find(c => c.name.toLowerCase().includes("serviço") || c.name.toLowerCase().includes("servico"));
+        }
+        if (!match && isMarketing) {
+          match = possibleCategories.find(c => {
+            const n = c.name.toLowerCase();
+            return n.includes("marketing") || n.includes("anúncio") || n.includes("anuncio") || n.includes("tráfego") || n.includes("trafego") || n.includes("ads");
+          });
+        }
+        if (!match && isSoftware) {
+          match = possibleCategories.find(c => {
+            const n = c.name.toLowerCase();
+            return n.includes("software") || n.includes("saas") || n.includes("assinatura") || n.includes("sistema");
+          });
+        }
+        if (!match && isTax) {
+          match = possibleCategories.find(c => {
+            const n = c.name.toLowerCase();
+            return n.includes("das") || n.includes("simples") || n.includes("imposto") || n.includes("tributo");
+          });
+        }
+        if (!match && isRent) {
+          match = possibleCategories.find(c => {
+            const n = c.name.toLowerCase();
+            return n.includes("aluguel") || n.includes("escritório") || n.includes("galpão") || n.includes("galpao");
+          });
+        }
+        if (!match && isSalary) {
+          match = possibleCategories.find(c => {
+            const n = c.name.toLowerCase();
+            return n.includes("salário") || n.includes("salario") || n.includes("folha") || n.includes("pessoal") || n.includes("pró-labore") || n.includes("pro-labore") || n.includes("pro labore");
+          });
+        }
+        if (!match && isUtility) {
+          match = possibleCategories.find(c => {
+            const n = c.name.toLowerCase();
+            return n.includes("energia") || n.includes("utilidade") || n.includes("luz") || n.includes("água") || n.includes("agua");
+          });
+        }
+        if (!match && isBank) {
+          match = possibleCategories.find(c => {
+            const n = c.name.toLowerCase();
+            return n.includes("tarifa") || n.includes("taxa") || n.includes("banca") || n.includes("banco");
+          });
+        }
+        if (!match && isFreight) {
+          match = possibleCategories.find(c => {
+            const n = c.name.toLowerCase();
+            return n.includes("frete") || n.includes("logística") || n.includes("logistica") || n.includes("entrega");
+          });
+        }
+        if (!match && isIA) {
+          match = possibleCategories.find(c => {
+            const n = c.name.toLowerCase();
+            return n.includes("openai") || n.includes("gemini") || n.includes("api") || n.includes("ia") || n.includes("i.a.");
+          });
+        }
+      }
+
+      if (!match) {
+        match = possibleCategories.find(c => c.name.toLowerCase().includes(incomingName));
+      }
+      if (!match) {
+        match = possibleCategories.find(c => incomingName.includes(c.name.toLowerCase()));
+      }
+      
+      let categoryId = "";
+      if (match) {
+        categoryId = match.id;
+      } else {
+        const fallbackCat = possibleCategories[0];
+        categoryId = fallbackCat ? fallbackCat.id : (categories[0]?.id || "");
+      }
+      
+      await addTransaction({
+        date: new Date(),
+        description: detected.description || (type === "income" ? "Venda Registrada" : "Pagamento Registrado"),
+        amount: Number(detected.amount),
+        type,
+        categoryId,
+        isProductSale: detected.isProductSale || undefined,
+        productId: detected.productId || undefined,
+        quantity: detected.quantity !== undefined ? Number(detected.quantity) : undefined,
+        productCostPrice: detected.productCostPrice !== undefined ? Number(detected.productCostPrice) : undefined
+      });
+      
+      showToast(`Dafne AI: Lançamento de "${detected.description || (type === 'income' ? 'Receita' : 'Despesa')}" adicionado com sucesso!`, "success");
+    } catch (err) {
+      console.error("Failed to add transaction automatically:", err);
+      showToast("Erro ao persistir lançamento automático.", "error");
+    }
+  };
+
+  const isAdmin = user?.email === "cristianmilkymoo@gmail.com";
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -206,12 +492,12 @@ export default function GeminiChatView() {
   const [showConfig, setShowConfig] = useState(false);
   const [selectedEngine, setSelectedEngine] = useState<"gemini" | "chatgpt">("gemini");
   const [precisionTemp, setPrecisionTemp] = useState<number>(0.75);
-  const [neuralTier, setNeuralTier] = useState<"flash" | "pro" | "quantum">("quantum");
+  const [neuralTier, setNeuralTier] = useState<"flash" | "pro" | "quantum">("pro");
 
   // Custom key/model and dynamic grounding options (alta tecnologia)
   const [customGeminiKey, setCustomGeminiKey] = useState<string>(() => {
     const saved = localStorage.getItem("custom_gemini_key");
-    if (!saved || saved === "AIzaSyC0FurafhGqn7jIOUYsJ0WMeMfhkvIihwA") {
+    if (!saved || saved === "DEMO_KEY_PLACEHOLDER_DISABLED") {
       return "";
     }
     return saved;
@@ -226,7 +512,7 @@ export default function GeminiChatView() {
       showToast("Insira uma chave válida com mais de 10 caracteres para testar.", "warning");
       return;
     }
-    if (customGeminiKey.trim() === "AIzaSyC0FurafhGqn7jIOUYsJ0WMeMfhkvIihwA") {
+    if (customGeminiKey.trim() === "DEMO_KEY_PLACEHOLDER_DISABLED") {
       showToast("Chave padrão de demonstração desativada. Para testes ou uso real, insira sua própria API Key do Google AI Studio.", "warning");
       return;
     }
@@ -271,6 +557,7 @@ export default function GeminiChatView() {
   const [selectedGeminiModel, setSelectedModel] = useState<string>(() => {
     return localStorage.getItem("selected_gemini_model") || "gemini-3.5-flash";
   });
+  const [mobileTabActive, setMobileTabActive] = useState<"chat" | "panel">("chat");
   const [useSearch, setUseSearch] = useState<boolean>(false);
   const [useMaps, setUseMaps] = useState<boolean>(false);
 
@@ -321,12 +608,18 @@ export default function GeminiChatView() {
   const [voicePitch, setVoicePitch] = useState<number>(1.15); // Jennifer sweet spot
   const [preferNeuralNaming, setPreferNeuralNaming] = useState<boolean>(true);
 
+  // Simulation and pricing sensitivity variables
+  const [priceAdjustmentPct, setPriceAdjustmentPct] = useState<number>(0);
+  const [costOptimizationPct, setCostOptimizationPct] = useState<number>(0);
+
   // Voice Dictation (Speech to Text)
+  const [showLiveCall, setShowLiveCall] = useState<boolean>(false);
   const [isDictating, setIsDictating] = useState<boolean>(false);
-  const [dictationStatus, setDictationStatus] = useState<string>(prev => prev || "");
+  const [dictationStatus, setDictationStatus] = useState<string>("");
   const [isHandsFreeMode, setIsHandsFreeMode] = useState<boolean>(false);
   const [micPermissionError, setMicPermissionError] = useState<string | null>(null);
   const isHandsFreeRef = useRef(false);
+  const dictationRecRef = useRef<any>(null);
 
   // Innovative Connectivity & Latency Optimizer States
   const [isOnline, setIsOnline] = useState<boolean>(typeof window !== "undefined" ? window.navigator.onLine : true);
@@ -336,6 +629,8 @@ export default function GeminiChatView() {
   const [ultraOptimizedMode, setUltraOptimizedMode] = useState<boolean>(true);
   const [cacheSyncedCount, setCacheSyncedCount] = useState<number>(14);
   const [compressLevel, setCompressLevel] = useState<string>("Inteligente (2.0x)");
+  const [personaId, setPersonaId] = useState<"mentor" | "growth" | "auditor" | "jennifer">("mentor");
+  const [customDirectives, setCustomDirectives] = useState<string>("");
 
   useEffect(() => {
     const handleOnline = () => {
@@ -455,9 +750,24 @@ export default function GeminiChatView() {
       transactionsCount: transactions.length,
       companyName: profile?.companyName || "Minha Empresa",
       businessSegment: profile?.businessSegment || "other",
+      businessNicheDetail: profile?.businessNicheDetail || "",
+      userEmail: user?.email || "",
       dre: dre.map((d) => ({ label: d.label, value: d.value })),
       pendingBills: pendingBillsCount,
-      productsCount: products.length
+      productsCount: products.length,
+      products: products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        sku: p.sku || "",
+        costPrice: p.costPrice || 0,
+        sellingPrice: p.sellingPrice || 0,
+        cmvPct: p.cmvPct || 0,
+        taxRate: p.taxRate || 0,
+        otherCostsPct: p.otherCostsPct || 0,
+        profitMarginPct: p.profitMarginPct || 0,
+        profitValue: p.profitValue || 0,
+        salesCount: p.salesCount || 0
+      }))
     };
   };
 
@@ -500,18 +810,69 @@ export default function GeminiChatView() {
     cleanText = cleanText.substring(0, 1600); // Balanced safety limit for browser engines
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = "pt-BR";
     
-    // Assign selected Portuguese voice
-    if (voicesList.length > 0) {
-      const activeVoice = voicesList.find((v) => v.name === selectedVoiceName);
-      if (activeVoice) {
-        utterance.voice = activeVoice;
+    // Read dynamic pitch, rate, and voice name pre-configured by user
+    const savedPitch = localStorage.getItem("dafne_voice_pitch");
+    const savedRate = localStorage.getItem("dafne_voice_rate");
+    const savedVoiceName = localStorage.getItem("dafne_selected_voice") || "";
+
+    utterance.rate = savedRate ? parseFloat(savedRate) : 1.10;
+    utterance.pitch = savedPitch ? parseFloat(savedPitch) : 1.15;
+
+    // Locate and assign correct Portuguese voice
+    const availableVoices = window.speechSynthesis.getVoices();
+    const ptBrVoices = availableVoices.filter(v => 
+      v.lang.toLowerCase().includes("pt-br") || 
+      v.lang.toLowerCase().startsWith("pt")
+    );
+
+    let chosenVoice: SpeechSynthesisVoice | null = null;
+    if (ptBrVoices.length > 0) {
+      if (savedVoiceName) {
+        chosenVoice = ptBrVoices.find(v => v.name === savedVoiceName) || null;
+      }
+      if (!chosenVoice) {
+        chosenVoice = ptBrVoices.find(v => {
+          const name = v.name.toLowerCase();
+          return name.includes("natural") && (
+            name.includes("maria") || 
+            name.includes("francisca") || 
+            name.includes("google") || 
+            name.includes("female") || 
+            name.includes("mulher") || 
+            name.includes("suave")
+          );
+        }) || null;
+      }
+      if (!chosenVoice) {
+        chosenVoice = ptBrVoices.find(v => {
+          const name = v.name.toLowerCase();
+          return name.includes("maria") || 
+                 name.includes("francisca") || 
+                 name.includes("heloisa") || 
+                 name.includes("heloísa") || 
+                 name.includes("luciana") || 
+                 name.includes("victoria") || 
+                 name.includes("vitoria") || 
+                 name.includes("vitória") || 
+                 name.includes("fernanda") || 
+                 name.includes("priscilla") || 
+                 name.includes("helena") || 
+                 name.includes("zoraida") || 
+                 name.includes("female") || 
+                 name.includes("mulher") || 
+                 name.includes("suave");
+        }) || null;
+      }
+      if (!chosenVoice) {
+        chosenVoice = ptBrVoices[0];
       }
     }
-    
-    utterance.lang = "pt-BR";
-    utterance.rate = isJenniferMode ? 1.10 : voiceRate;
-    utterance.pitch = isJenniferMode ? 1.15 : voicePitch;
+
+    if (chosenVoice) {
+      utterance.voice = chosenVoice;
+    }
 
     utterance.onend = () => {
       setIsPlayingId(null);
@@ -590,14 +951,14 @@ export default function GeminiChatView() {
       return true;
     }
 
-    // Command 5: Enable Premium Jennifer Signature voice rate/pitch parameters
-    if (text === "ativar voz jennifer" || text === "ativar jennifer" || text === "modo jennifer") {
+    // Command 5: Enable Premium Dafne Ágil Signature voice rate/pitch parameters
+    if (text === "ativar voz rápida" || text === "ativar dafne ágil" || text === "modo rápido") {
       setIsJenniferMode(true);
-      setVoiceRate(1.10);
-      setVoicePitch(1.15);
-      showToast("Voz Jennifer (neural, fluida e amigável) ativada! 🗣️✨", "success");
+      setVoiceRate(1.15);
+      setVoicePitch(1.10);
+      showToast("Voz da Dafne Ágil (neural e dinâmica) ativada! 🗣️✨", "success");
       try { sound.playSuccess(); } catch(e){}
-      speakMessage("Assinatura de voz jennifer ativada. Sinta a diferença acústica desse tom de voz.", 0);
+      speakMessage("Assinatura de voz dinâmica habilitada. Sintonizada para ritmo de faturamento veloz.", 0);
       return true;
     }
 
@@ -649,7 +1010,20 @@ export default function GeminiChatView() {
       return;
     }
 
-    if (isDictating || (synthRef.current && synthRef.current.speaking)) {
+    if (isDictating) {
+      if (dictationRecRef.current) {
+        try {
+          dictationRecRef.current.abort();
+        } catch (e) {}
+        dictationRecRef.current = null;
+      }
+      setIsDictating(false);
+      setDictationStatus("");
+      showToast("Entrada de áudio encerrada.", "info");
+      return;
+    }
+
+    if (synthRef.current && synthRef.current.speaking) {
       return;
     }
 
@@ -659,6 +1033,8 @@ export default function GeminiChatView() {
       rec.continuous = false;
       rec.interimResults = false;
       rec.maxAlternatives = 1;
+
+      dictationRecRef.current = rec;
 
       setIsDictating(true);
       setDictationStatus("Transcrevendo voz em tempo real...");
@@ -693,22 +1069,25 @@ export default function GeminiChatView() {
         console.error("Dictation error: ", e);
         const errType = e.error;
         
-        if (errType === "not-allowed" || errType === "audio-capture") {
+        if (errType === "not-allowed" || errType === "audio-capture" || errType === "service-not-allowed") {
           setIsHandsFreeMode(false);
           setMicPermissionError("not-allowed");
-          showToast("Acesso ao microfone recusado ou indisponível.", "error");
+          showToast("Microfone Bloqueado: Para usar o microfone da assistente, abra o aplicativo em uma 'Nova Aba' (botão no topo direito) para reativar!", "error");
         } else {
           if (isHandsFreeRef.current) {
             console.log("Ignored silent/aborted dictation error. Continuous dialogue active.");
           } else {
             setMicPermissionError(errType || "unknown");
-            showToast("Houve um atraso ou o microfone foi recusado.", "error");
+            showToast("Houve um atraso ou o microfone foi recusado. Se estiver na AI Studio, use o botão 'Abrir em Nova Aba'!", "error");
           }
         }
         setIsDictating(false);
       };
 
       rec.onend = () => {
+        if (dictationRecRef.current === rec) {
+          dictationRecRef.current = null;
+        }
         setIsDictating(false);
         setDictationStatus("");
         
@@ -724,7 +1103,7 @@ export default function GeminiChatView() {
 
       rec.start();
     } catch (err) {
-      console.error(err);
+      console.error("Error launching speech dictation:", err);
       setIsDictating(false);
     }
   };
@@ -754,7 +1133,7 @@ export default function GeminiChatView() {
     try {
       sound.playSuccess();
       const doc = new AbntPdfDocument();
-      const compName = profile?.companyName || "VALORA CORPORATIVO";
+      const compName = profile?.companyName || "MAX PERFORMANCE BUSINESS";
       
       doc.drawCover(
         compName,
@@ -897,7 +1276,7 @@ export default function GeminiChatView() {
 
       const endpoint = selectedEngine === "chatgpt" ? "/api/ai/chat-gpt" : "/api/ai/chat-dafne";
       const customHeaders: any = { "Content-Type": "application/json" };
-      if (customGeminiKey && customGeminiKey.trim().length > 10 && customGeminiKey.trim() !== "AIzaSyC0FurafhGqn7jIOUYsJ0WMeMfhkvIihwA") {
+      if (customGeminiKey && customGeminiKey.trim().length > 10 && customGeminiKey.trim() !== "DEMO_KEY_PLACEHOLDER_DISABLED") {
         customHeaders["X-Custom-Gemini-Key"] = customGeminiKey.trim();
       }
       if (selectedEngine === "gemini" && selectedGeminiModel) {
@@ -918,13 +1297,25 @@ export default function GeminiChatView() {
           useSearch,
           useMaps,
           latitude,
-          longitude
+          longitude,
+          enableTransactionParsing: true,
+          personaId,
+          customDirectives
         })
       });
 
       const resData = await response.json();
       const responseTime = Date.now() - startTime;
       
+      if (resData.detectedTransaction) {
+        handleAutomaticTransactionLogging(resData.detectedTransaction);
+      } else {
+        const localDetected = parseClientTransactionFallback(textToSend);
+        if (localDetected) {
+          handleAutomaticTransactionLogging(localDetected);
+        }
+      }
+
       const responseText = resData.text || "Análise de Caixa e Lucratividade ativa. Recomendo focar na eficiência das Linhas de OPEX ou noMarkup ideal do seu mix de produtos.";
       
       // Removed the fallback warning toast as requested to remain seamless and clean
@@ -1247,6 +1638,24 @@ Para escalar sem consumir o caixa operacional imediato, sugiro:
             </div>
           </div>
 
+          {/* Real-time Voice Call Button */}
+          <button
+            type="button"
+            onClick={() => {
+              sound.playSuccess();
+              setShowLiveCall(!showLiveCall);
+            }}
+            className={cn(
+              "px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-2 border shadow-sm hover:shadow-md",
+              showLiveCall
+                ? "bg-rose-600 border-rose-700 text-white"
+                : "bg-orange-500 hover:bg-orange-600 text-black border-orange-650/25"
+            )}
+          >
+            <Mic size={13} className={showLiveCall ? "animate-pulse" : ""} />
+            {showLiveCall ? "Voltar para Chat Digital" : "Ligar para Dafne (Live Call)"}
+          </button>
+
           {/* Telemetry settings toggle */}
           <button
             onClick={() => {
@@ -1279,75 +1688,77 @@ Para escalar sem consumir o caixa operacional imediato, sugiro:
             <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6 bg-slate-50/70 border-b border-gray-200">
               
               {/* PAINEL DE OTIMIZAÇÃO DE CHAVES API E VOZ FEMININA INTELIGENTE */}
-              <div className="col-span-1 md:col-span-4 p-5 rounded-2xl bg-[#f4f7fb]/80 border border-slate-205 shadow-xs grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
-                <div className="lg:col-span-5 space-y-1.5 text-left">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1 px-2 text-[8px] font-black uppercase bg-indigo-50 text-indigo-700 rounded-md border border-indigo-150">
-                      Criptografia Ponta a Ponta 🔒
-                    </span>
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              {isAdmin && (
+                <div className="col-span-1 md:col-span-4 p-5 rounded-2xl bg-[#f4f7fb]/80 border border-slate-205 shadow-xs grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                  <div className="lg:col-span-5 space-y-1.5 text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1 px-2 text-[8px] font-black uppercase bg-indigo-50 text-indigo-700 rounded-md border border-indigo-150">
+                        Criptografia Ponta a Ponta 🔒
+                      </span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    </div>
+                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                      <KeyRound size={13} className="text-indigo-600" />
+                      Chave API do Desenvolvedor (Otimização Local)
+                    </h4>
+                    <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                      Sua chave é armazenada de forma segura na memória e processada em canais de dados criptografados. Se nenhuma chave for fornecida, o sistema usará a chave global do administrador automaticamente.
+                    </p>
                   </div>
-                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 font-sans">
-                    <KeyRound size={13} className="text-indigo-600" />
-                    Chave API do Desenvolvedor (Otimização Local)
-                  </h4>
-                  <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
-                    Sua chave é armazenada de forma segura na memória e processada em canais de dados criptografados. Se nenhuma chave for fornecida, o sistema usará a chave global do administrador automaticamente.
-                  </p>
-                </div>
 
-                <div className="lg:col-span-4">
-                  <div className="relative flex items-center">
-                    <input
-                      type={showApiKey ? "text" : "password"}
-                      value={customGeminiKey}
-                      onChange={(e) => {
-                        setCustomGeminiKey(e.target.value);
-                        setKeyTestingStatus("idle");
-                      }}
-                      placeholder="Cole sua API Key do Gemini (ex: AIzaSy...)"
-                      className="w-full text-[11px] font-mono border border-gray-300 bg-white p-3 pr-10 rounded-xl focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-700 placeholder:text-gray-400 font-bold"
-                    />
+                  <div className="lg:col-span-4">
+                    <div className="relative flex items-center">
+                      <input
+                        type={showApiKey ? "text" : "password"}
+                        value={customGeminiKey}
+                        onChange={(e) => {
+                          setCustomGeminiKey(e.target.value);
+                          setKeyTestingStatus("idle");
+                        }}
+                        placeholder="Cole sua API Key do Gemini (ex: AIzaSy...)"
+                        className="w-full text-[11px] font-mono border border-gray-300 bg-white p-3 pr-10 rounded-xl focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-700 placeholder:text-gray-400 font-bold"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setShowApiKey(!showApiKey);
+                        }}
+                        className="absolute right-3 text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        {showApiKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-3 flex flex-col sm:flex-row items-stretch gap-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        sound.playClick();
-                        setShowApiKey(!showApiKey);
-                      }}
-                      className="absolute right-3 text-slate-400 hover:text-slate-600 transition-colors"
+                      onClick={handleTestCustomKey}
+                      disabled={keyTestingStatus === "testing"}
+                      className={cn(
+                        "flex-1 text-[9px] font-black uppercase tracking-wider px-3.5 py-3 rounded-xl transition-all cursor-pointer text-center",
+                        keyTestingStatus === "testing"
+                          ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                          : "bg-indigo-600 hover:bg-indigo-700 hover:translate-y-[-1px] text-white font-sans shadow-xs"
+                      )}
                     >
-                      {showApiKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                      {keyTestingStatus === "testing" ? "Conectando..." : "Validar Chave"}
                     </button>
+                    
+                    {keyTestingStatus === "success" && (
+                      <div className="flex items-center justify-center bg-emerald-50 text-emerald-700 text-[9px] font-black uppercase rounded-xl px-2 border border-emerald-200 animate-in fade-in duration-300">
+                        ⚡ {keyTestLatency ? `${keyTestLatency}ms` : "Ativa"}
+                      </div>
+                    )}
+                    {keyTestingStatus === "error" && (
+                      <div className="flex items-center justify-center bg-rose-50 text-rose-700 text-[9px] font-black uppercase rounded-xl px-2 border border-rose-200 animate-in fade-in duration-300">
+                        ⚠️ Incorreta
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                <div className="lg:col-span-3 flex flex-col sm:flex-row items-stretch gap-2">
-                  <button
-                    type="button"
-                    onClick={handleTestCustomKey}
-                    disabled={keyTestingStatus === "testing"}
-                    className={cn(
-                      "flex-1 text-[9px] font-black uppercase tracking-wider px-3.5 py-3 rounded-xl transition-all cursor-pointer text-center",
-                      keyTestingStatus === "testing"
-                        ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                        : "bg-indigo-600 hover:bg-indigo-700 hover:translate-y-[-1px] text-white font-sans shadow-xs"
-                    )}
-                  >
-                    {keyTestingStatus === "testing" ? "Conectando..." : "Validar Chave"}
-                  </button>
-                  
-                  {keyTestingStatus === "success" && (
-                    <div className="flex items-center justify-center bg-emerald-50 text-emerald-700 text-[9px] font-black uppercase rounded-xl px-2 border border-emerald-200 animate-in fade-in duration-300">
-                      ⚡ {keyTestLatency ? `${keyTestLatency}ms` : "Ativa"}
-                    </div>
-                  )}
-                  {keyTestingStatus === "error" && (
-                    <div className="flex items-center justify-center bg-rose-50 text-rose-700 text-[9px] font-black uppercase rounded-xl px-2 border border-rose-200 animate-in fade-in duration-300">
-                      ⚠️ Incorreta
-                    </div>
-                  )}
-                </div>
-              </div>
+              )}
               
               {/* Voz Feminina de Alta Fidelidade (Jennifer) - Configuração Única Otimizada */}
               <div className="col-span-1 md:col-span-2 p-4 rounded-2xl bg-gradient-to-br from-indigo-50/70 via-indigo-100/30 to-slate-50 border border-indigo-150 text-left space-y-3 relative overflow-hidden flex flex-col justify-between">
@@ -1464,6 +1875,60 @@ Para escalar sem consumir o caixa operacional imediato, sugiro:
                       Enterprise Auto-Tier
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Strategic Persona & Custom Business Focus */}
+              <div className="col-span-1 md:col-span-2 space-y-4 text-left p-4 rounded-xl bg-white border border-slate-150 shadow-2xs">
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck size={13} className="text-orange-555 animate-pulse" />
+                  <label className="text-[10px] font-black text-slate-800 uppercase tracking-wider block font-sans">
+                    Diretrizes & Foco Estratégico da IA 📌
+                  </label>
+                </div>
+                
+                <div className="grid grid-cols-4 gap-1 bg-gray-100 p-1 rounded-xl">
+                  {[
+                    { id: "mentor", label: "Mentor", desc: "Equilibrado" },
+                    { id: "growth", label: "Growth", desc: "Alavancagem" },
+                    { id: "auditor", label: "Auditor", desc: "Rigor DRE" },
+                    { id: "jennifer", label: "Dafne Ágil", desc: "Caixa Ágil" }
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setPersonaId(p.id as any);
+                        showToast(`Foco de cognição alterado para ${p.label}!`, "success");
+                      }}
+                      className={cn(
+                        "py-1 text-center rounded-lg transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 border",
+                        personaId === p.id
+                          ? "bg-amber-500 border-amber-500 text-slate-900 font-semibold shadow-xs"
+                          : "bg-white border-transparent text-gray-500 hover:text-slate-800"
+                      )}
+                    >
+                      <span className="text-[9.5px] font-bold uppercase">{p.label}</span>
+                      <span className="text-[7px] opacity-75">{p.desc}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[9.5px] font-black text-slate-650 uppercase tracking-tight">
+                      Diretrizes do Seu Negócio 🖋️
+                    </label>
+                    <span className="text-[7px] text-gray-400 uppercase">INJEÇÃO DE CONTEXTO</span>
+                  </div>
+                  <textarea
+                    rows={1}
+                    value={customDirectives}
+                    onChange={(e) => setCustomDirectives(e.target.value)}
+                    placeholder="Ex: Não oferecer descontos; Focar no OPEX..."
+                    className="w-full text-[10px] font-bold bg-white border border-gray-300 rounded-xl px-2.5 py-1.5 text-slate-700 placeholder:text-gray-400 focus:ring-1 focus:ring-indigo-500 outline-none resize-none"
+                  />
                 </div>
               </div>
 
@@ -1778,7 +2243,7 @@ Para escalar sem consumir o caixa operacional imediato, sugiro:
                       </g>
  
                       {/* Node Gemini */}
-                      <g onClick={() => showToast("Cérebro Artificial Principal: Ativo e Atento", "info")} className="cursor-pointer">
+                      <g onClick={() => showToast("Copilot Virtual Principal: Ativo e Atento", "info")} className="cursor-pointer">
                         <circle cx="240" cy="75" r="11" fill="#271408" stroke="#f97316" strokeWidth="2" filter="url(#glow-mesh-orange)" className="animate-pulse" />
                         <circle cx="240" cy="75" r="3" fill="#ffedd5" />
                         <text x="240" y="94" textAnchor="middle" fill="#f97316" fontSize="8" fontFamily="monospace" fontWeight="black">DAFNE_CORE</text>
@@ -1891,13 +2356,55 @@ Para escalar sem consumir o caixa operacional imediato, sugiro:
         )}
       </AnimatePresence>
 
+      {/* Segmented Switcher for Mobile: Chat vs Diagnostic Panel */}
+      <div className="flex items-center justify-center lg:hidden bg-white border-b border-gray-150 p-2.5 gap-2 shrink-0">
+        <button
+          type="button"
+          onClick={() => {
+            sound.playClick();
+            setMobileTabActive("chat");
+          }}
+          className={cn(
+            "flex-1 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border text-center cursor-pointer",
+            mobileTabActive === "chat"
+              ? "bg-orange-500 text-black border-orange-500 shadow-xs"
+              : "bg-gray-50 text-slate-600 border-gray-200"
+          )}
+        >
+          💬 Chat da Mentora
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            sound.playClick();
+            setMobileTabActive("panel");
+          }}
+          className={cn(
+            "flex-1 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border text-center cursor-pointer",
+            mobileTabActive === "panel"
+              ? "bg-orange-500 text-black border-orange-500 shadow-xs"
+              : "bg-gray-50 text-slate-600 border-gray-200"
+          )}
+        >
+          📊 Métricas & Diagnósticos
+        </button>
+      </div>
+
       {/* 2-Column Responsive Layout wrapping Chat and Business Integration Hub */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-[#FAFBFD] border-t border-gray-200/55">
         
         {/* Left Column: Conversational interface (8 cols) */}
-        <div className="lg:col-span-8 flex flex-col justify-between bg-white border-r border-gray-200/60 overflow-hidden relative">
-          
-          {/* Main Conversational Layout Area */}
+        <div className={cn(
+          "lg:col-span-8 flex flex-col justify-between bg-white border-r border-gray-200/60 overflow-hidden relative",
+          mobileTabActive !== "chat" && "hidden lg:flex"
+        )}>
+          {showLiveCall ? (
+            <div className="flex-1 p-3 bg-slate-50 overflow-hidden flex flex-col h-full">
+              <GeminiLiveCall onClose={() => setShowLiveCall(false)} />
+            </div>
+          ) : (
+            <>
+              {/* Main Conversational Layout Area */}
           <div className="flex-1 p-6 overflow-y-auto max-h-[52vh] flex flex-col gap-6 scrollbar-thin scrollbar-thumb-gray-200">
             
             {/* Full Gemini style landing list if no user messages generated */}
@@ -2302,6 +2809,45 @@ Para escalar sem consumir o caixa operacional imediato, sugiro:
               </div>
             )}
 
+            {/* Quick Support Financial Terms Suggestion Chips */}
+            <div className="max-w-4xl mx-auto w-full flex flex-col gap-1.5 pb-2.5 text-left">
+              <span className="text-[10px] font-black uppercase text-gray-500 tracking-wider flex items-center gap-1.5 px-px select-none">
+                <Brain size={11} className="text-orange-500 animate-pulse" />
+                Dicionário & Suporte Rápido a Termos Financeiros:
+              </span>
+              <div 
+                className="flex gap-2 overflow-x-auto pb-1"
+                style={{
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none"
+                }}
+              >
+                {[
+                  { label: "O que é EBITDA?", term: "EBITDA" },
+                  { label: "Margem de Contribuição", term: "Margem de Contribuição" },
+                  { label: "Ponto de Equilíbrio", term: "Ponto de Equilíbrio" },
+                  { label: "Runway de Caixa", term: "Runway (Sobrevivência Financeira)" },
+                  { label: "Markup Operacional", term: "Markup" },
+                  { label: "Lucratividade vs Rentabilidade", term: "Lucratividade vs Rentabilidade" },
+                  { label: "OPEX e CAPEX", term: "OPEX e CAPEX" },
+                  { label: "Cálculo do CMV", term: "CMV (Custo de Mercadoria Vendida)" }
+                ].map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      handleSendMessage(`Explique o conceito técnico de "${chip.term}". Qual sua fórmula básica de cálculo, de forma extremamente simples e prática, e como esse conceito se aplica diretamente na realidade atual do meu negócio?`);
+                    }}
+                    className="shrink-0 bg-white hover:bg-orange-50 text-slate-800 hover:text-orange-600 px-3.5 py-1.5 rounded-full text-[11px] font-bold border border-gray-200 hover:border-orange-200 transition-all cursor-pointer shadow-xs active:scale-95 flex items-center gap-1"
+                  >
+                    <span>💡</span>
+                    <span>{chip.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -2378,6 +2924,12 @@ Para escalar sem consumir o caixa operacional imediato, sugiro:
                   } else {
                     showToast("Modo Viva-Voz desativado.", "info");
                     if (isDictating) {
+                      if (dictationRecRef.current) {
+                        try {
+                          dictationRecRef.current.abort();
+                        } catch (e) {}
+                        dictationRecRef.current = null;
+                      }
                       setIsDictating(false);
                     }
                   }
@@ -2414,11 +2966,15 @@ Para escalar sem consumir o caixa operacional imediato, sugiro:
               </p>
             </div>
           </div>
+          </>)}
 
         </div>
 
         {/* Right Column (4/12 width on desktop): Business Integration Hub & Smart Shortcuts */}
-        <div className="lg:col-span-4 bg-[#F8FAFC]/95 p-5 overflow-y-auto max-h-[64vh] flex flex-col gap-5 border-l border-gray-200/40 scrollbar-thin scrollbar-thumb-gray-200 select-none">
+        <div className={cn(
+          "lg:col-span-4 bg-[#F8FAFC]/95 p-5 overflow-y-auto max-h-[64vh] flex flex-col gap-5 border-l border-gray-200/40 scrollbar-thin scrollbar-thumb-gray-200 select-none",
+          mobileTabActive !== "panel" && "hidden lg:flex"
+        )}>
           
           {/* Hub Title */}
           <div className="space-y-1 pb-3 border-b border-gray-200">
@@ -2494,7 +3050,107 @@ Para escalar sem consumir o caixa operacional imediato, sugiro:
             </button>
           </div>
 
-          {/* 3. Insumos e Markup de Produtos Catalogados */}
+          {/* 3. IA Price Sensitivity & Expense Simulation Widget */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-[#1e2338] to-[#111422] border border-orange-500/20 text-white space-y-4 shadow-lg">
+            <div className="flex justify-between items-center pb-2 border-b border-white/10">
+              <span className="text-[10px] font-black uppercase text-orange-400 tracking-wider flex items-center gap-1">
+                <Brain size={12} className="text-orange-400" />
+                Simulador de Alavanca de Lucro IA
+              </span>
+              <span className="px-1.5 py-0.5 rounded-full text-[8px] font-mono leading-none font-bold bg-orange-500 text-black">
+                PROJETADO
+              </span>
+            </div>
+
+            <div className="space-y-3.5">
+              {/* Slider 1: Reajuste de Preços */}
+              <div className="space-y-1.5 text-left">
+                <div className="flex justify-between text-[11px] font-bold">
+                  <span className="text-gray-300">Reajuste de Preço Médio:</span>
+                  <span className={cn(priceAdjustmentPct > 0 ? "text-emerald-400 animate-pulse" : priceAdjustmentPct < 0 ? "text-rose-400 animate-pulse" : "text-gray-450")}>
+                    {priceAdjustmentPct > 0 ? `+${priceAdjustmentPct}%` : `${priceAdjustmentPct}%`}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="-25"
+                  max="25"
+                  step="1"
+                  value={priceAdjustmentPct}
+                  onChange={(e) => setPriceAdjustmentPct(Number(e.target.value))}
+                  className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                />
+                <div className="flex justify-between text-[8.5px] text-gray-400 font-medium">
+                  <span>-25% (Desconto)</span>
+                  <span>Neutro</span>
+                  <span>+25% (Aumento)</span>
+                </div>
+              </div>
+
+              {/* Slider 2: Otimização de Custos */}
+              <div className="space-y-1.5 text-left">
+                <div className="flex justify-between text-[11px] font-bold">
+                  <span className="text-gray-300">Redução de Custos / OPEX:</span>
+                  <span className={cn(costOptimizationPct > 0 ? "text-emerald-400 animate-pulse" : "text-gray-450")}>
+                    {costOptimizationPct > 0 ? `-${costOptimizationPct}%` : "0%"}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="40"
+                  step="1"
+                  value={costOptimizationPct}
+                  onChange={(e) => setCostOptimizationPct(Number(e.target.value))}
+                  className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-550"
+                />
+                <div className="flex justify-between text-[8.5px] text-gray-400 font-medium">
+                  <span>Margem Atual</span>
+                  <span>-40% (Corte Eficiente)</span>
+                </div>
+              </div>
+
+              {/* Resultado Projetado Box */}
+              <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400 font-medium font-sans">Lucro Proj.:</span>
+                  <span className={cn("font-extrabold text-xs font-mono", (incomeTotal * (1 + priceAdjustmentPct / 100)) - (expenseTotal * (1 - costOptimizationPct / 100)) >= 0 ? "text-emerald-400" : "text-rose-400")}>
+                    {formatCurrency((incomeTotal * (1 + priceAdjustmentPct / 100)) - (expenseTotal * (1 - costOptimizationPct / 100)), profile?.currency || "BRL")}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400 font-medium font-sans">Margem EBITDA Proj.:</span>
+                  <span className="font-extrabold text-xs text-orange-300 font-mono">
+                    {((incomeTotal * (1 + priceAdjustmentPct / 100)) > 0 
+                      ? (((incomeTotal * (1 + priceAdjustmentPct / 100) - expenseTotal * (1 - costOptimizationPct / 100)) / (incomeTotal * (1 + priceAdjustmentPct / 100))) * 100)
+                      : 0).toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                const currentProjRevenue = incomeTotal * (1 + priceAdjustmentPct / 100);
+                const currentProjExpenses = expenseTotal * (1 - costOptimizationPct / 100);
+                const currentProjProfit = currentProjRevenue - currentProjExpenses;
+                const currentProjEbitdaMargin = currentProjRevenue > 0 ? (currentProjProfit / currentProjRevenue) * 100 : 0;
+                
+                handleSendMessage(
+                  `Como mentora estrategista financeira Dafne, e considerando meu nicho de mercado ("${profile?.businessNicheDetail || 'geral'}"), faça uma avaliação cirúrgica sobre a viabilidade e os riscos de eu tentar aplicar uma simulação de reposicionamento: 1) Reajuste de preço médio em ${priceAdjustmentPct}% 2) Corte de custos/OPEX em ${costOptimizationPct}%. Isso mudaria meu lucro operacional projetado para R$ ${currentProjProfit.toLocaleString("pt-BR")}, com Margem EBITDA projetada de ${currentProjEbitdaMargin.toFixed(1)}%. Me dê 3 diretivas práticas para calibrar essas alavancas de forma segura no meu nicho.`
+                );
+              }}
+              className="w-full py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black rounded-xl text-xs font-black tracking-wider transition-all cursor-pointer shadow-md select-none flex items-center justify-center gap-1.5"
+            >
+              <Cpu size={12} className="animate-spin [animation-duration:5s]" />
+              Enviar Simulação para a I.A
+            </button>
+          </div>
+
+          {/* 4. Insumos e Markup de Produtos Catalogados */}
           <div className="p-4 rounded-2xl bg-white border border-gray-200/70 space-y-4 shadow-xs">
             <span className="text-[10px] font-black uppercase text-gray-450 tracking-wider block border-b border-slate-100 pb-2">Precificação do Catálogo (Fidelidade)</span>
             {products.length > 0 ? (
@@ -2539,7 +3195,7 @@ Para escalar sem consumir o caixa operacional imediato, sugiro:
                   return (
                     <div key={idx} className="flex items-center justify-between p-2.5 bg-rose-50/20 hover:bg-rose-50/50 border border-rose-100/75 rounded-xl transition-all">
                       <div className="text-left font-sans">
-                        <span className="text-xs font-bold text-slate-800 line-clamp-1 block">{bill.title}</span>
+                        <span className="text-xs font-bold text-slate-800 line-clamp-1 block">{bill.description}</span>
                         <div className="flex items-center gap-2 mt-0.5 text-[9px] font-mono text-gray-400">
                           <span className="text-rose-650 font-extrabold">R$ {bill.amount.toLocaleString("pt-BR")}</span>
                           <span>Vencimento: {billDate}</span>
@@ -2548,7 +3204,7 @@ Para escalar sem consumir o caixa operacional imediato, sugiro:
                       <button
                         onClick={() => {
                           sound.playClick();
-                          handleSendMessage(`Como posso planejar o fluxo de caixa para pagar a fatura em aberto de "${bill.title}" no valor de R$ ${bill.amount.toLocaleString("pt-BR")} que vence em ${billDate} sem estressar meu capital de giro? Forneça sugestões de prazos, desconto para quitação ou negociações.`);
+                          handleSendMessage(`Como posso planejar o fluxo de caixa para pagar a fatura em aberto de "${bill.description}" no valor de R$ ${bill.amount.toLocaleString("pt-BR")} que vence em ${billDate} sem estressar meu capital de giro? Forneça sugestões de prazos, desconto para quitação ou negociações.`);
                         }}
                         className="px-2 py-1 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-black transition-all border border-rose-600 cursor-pointer text-[9px] uppercase tracking-wider"
                         title="Planejar Fluxo de Caixa"

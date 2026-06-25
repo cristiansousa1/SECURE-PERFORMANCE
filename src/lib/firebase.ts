@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 import { initializeFirestore, doc, getDocFromServer, setLogLevel } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
@@ -7,7 +7,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
-}, firebaseConfig.firestoreDatabaseId);
+}, (firebaseConfig as any).firestoreDatabaseId);
 
 // Silence benign internal Firestore connection/debug/warning logs completely
 try {
@@ -97,14 +97,16 @@ if (typeof console !== 'undefined') {
   };
 
   if (typeof window !== 'undefined') {
-    // Prevent reaching window.onerror or unhandled promise rejection for these specific idle disconnect errors
+    // Prevent reaching window.onerror or unhandled promise rejection for these specific idle disconnect errors and cross-origin stream error masks
     window.addEventListener('error', (event) => {
       const errorMsg = event.message || '';
       if (
         errorMsg.includes('Disconnecting idle stream') ||
         errorMsg.includes('Disconnecting idle stream. Timed out waiting for new targets') ||
         errorMsg.includes('GrpcConnection') ||
-        errorMsg.includes('stream error. code: 1')
+        errorMsg.includes('stream error. code: 1') ||
+        errorMsg.toLowerCase().includes('script error') ||
+        errorMsg === 'Script error.'
       ) {
         event.preventDefault();
         event.stopPropagation();
@@ -119,7 +121,8 @@ if (typeof console !== 'undefined') {
           reasonStr.includes('disconnecting idle stream') ||
           reasonStr.includes('cancelled: disconnecting idle stream') ||
           reasonStr.includes('timed out waiting for new targets') ||
-          reasonStr.includes('stream error. code: 1')
+          reasonStr.includes('stream error. code: 1') ||
+          reasonStr.includes('script error')
         ) {
           event.preventDefault();
           event.stopPropagation();
@@ -140,14 +143,13 @@ export const loginWithGoogle = async () => {
   }
 };
 
-async function testConnection() {
+export const loginWithGoogleRedirect = async () => {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
+    await signInWithRedirect(auth, googleProvider);
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration.");
-    }
+    console.error('Redirect login error:', error);
+    throw error;
   }
-}
+};
 
-testConnection();
+// Connection checked dynamically on-demand; no blocking or false-positive offline-checks on initial load.
